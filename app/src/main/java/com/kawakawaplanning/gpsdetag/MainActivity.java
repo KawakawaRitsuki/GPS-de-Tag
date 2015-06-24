@@ -10,30 +10,21 @@ import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.parse.FindCallback;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
-
-import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
     EditText idet;
     EditText pwet;
-    Button loginButton;
-    Button signinButton;
     CheckBox checkBox;
     View loginView;
-    View signinView;
     String TAG;
     Boolean flag;
     Vibrator vib ;

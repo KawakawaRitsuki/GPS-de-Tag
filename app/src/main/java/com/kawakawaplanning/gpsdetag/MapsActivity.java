@@ -1,10 +1,12 @@
 package com.kawakawaplanning.gpsdetag;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -15,7 +17,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.Parse;
-import com.parse.ParseACL;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -41,8 +42,6 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        finish();
-
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
         myId = getIntent().getStringExtra("name");
@@ -59,6 +58,15 @@ public class MapsActivity extends FragmentActivity {
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
         mapInit();
 
+        startService(new Intent(this, SendGetService.class));
+
+        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopService(new Intent(MapsActivity.this,SendGetService.class));
+            }
+        });
+
     }
 
 
@@ -71,7 +79,7 @@ public class MapsActivity extends FragmentActivity {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sendLocate(googleMap);
+
                     }
                 });
                 getLocate(mem);
@@ -139,48 +147,6 @@ public class MapsActivity extends FragmentActivity {
         }).start();
     }
 
-
-
-    public void sendLocate(final GoogleMap googleMap){
-
-        final double lat = googleMap.getMyLocation().getLatitude();
-        final double lon = googleMap.getMyLocation().getLongitude();
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-
-                ParseACL acl = new ParseACL();
-                acl.setPublicReadAccess(true);
-                acl.setPublicWriteAccess(true);
-
-                try{
-                    if (query.find().size() != 0) {
-                        ParseObject testObject = query.find().get(0);
-                        testObject.put("USERID", myId);
-                        testObject.put("Latitude", lat);
-                        testObject.put("Longiutude", lon);
-                        testObject.setACL(acl);
-                        testObject.saveInBackground();
-                    } else {
-                        ParseObject testObject = new ParseObject("TestObject");
-                        testObject.put("USERID", myId);
-                        testObject.put("Latitude", lat);
-                        testObject.put("Longiutude", lon);
-                        testObject.setACL(acl);
-                        testObject.saveInBackground();
-                    }
-                }catch (ParseException e){
-
-                }
-            }
-        }).start();
-
-
-    }
 
     @Override
     protected void onStop() {

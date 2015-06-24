@@ -47,6 +47,12 @@
             android:name=".WaitMemberActivity"
             android:label="@string/title_activity_wait_member" >
         </activity>
+
+        <service
+            android:name=".SendGetService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>
