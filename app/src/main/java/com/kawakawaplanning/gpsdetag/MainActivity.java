@@ -65,29 +65,7 @@ public class MainActivity extends ActionBarActivity {
                     if (e == null) {
                         Log.d(TAG, "ログイン 成功");
 
-                        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                        query.whereEqualTo("USERID", pref.getString("username", ""));//そのクエリの中でReceiverがname変数のものを抜き出す。
-                        query.findInBackground(new FindCallback<ParseObject>() {
-                            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                                if (e == null) {//エラーが無ければ
-                                    if (parselist.size() != 0) {
-                                        ParseObject testObject = parselist.get(0);
 
-                                        testObject.put("USERID", pref.getString("username", ""));
-                                        testObject.put("LoginNow", true);
-                                        testObject.saveInBackground();
-                                    } else {
-                                        ParseObject testObject = new ParseObject("TestObject");
-
-                                        testObject.put("USERID", pref.getString("username", ""));
-                                        testObject.put("LoginNow", true);
-                                        testObject.saveInBackground();
-                                    }
-                                } else {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
 
                         Intent intent=new Intent();
                         intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");

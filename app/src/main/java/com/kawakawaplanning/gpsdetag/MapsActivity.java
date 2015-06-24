@@ -1,13 +1,10 @@
 package com.kawakawaplanning.gpsdetag;
 
-import android.content.Intent;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -17,7 +14,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
@@ -26,18 +22,13 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MapsActivity extends FragmentActivity implements LocationListener {
+public class MapsActivity extends FragmentActivity {
 
     private GoogleMap googleMap;
-
-    private LocationManager mLocationManager;
-    public double hereLat;
-    public double hereLou;
 
     public String myId;
     private Handler handler; //ThreadUI操作用
@@ -45,22 +36,19 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
     private Map<String, Marker> marker= new HashMap<String, Marker>();
 
     private String[] mem;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        finish();
+
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-        final boolean gpsEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (!gpsEnabled) {
-            enableLocationSettings();
-        }
-
         myId = getIntent().getStringExtra("name");
+
+
+
         mem = getIntent().getStringArrayExtra("selectGroup");
 
         TextView tv = (TextView) findViewById(R.id.textView);
@@ -68,61 +56,30 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
 
         handler = new Handler();
 
-//        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
-//        mapFragment.setRetainInstance(true);
         mapInit();
+
     }
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-        query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-        query.findInBackground(new FindCallback<ParseObject>() {
-            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                if (e == null) {//エラーが無ければ
-                    if (parselist.size() != 0) {
-                        ParseObject testObject = parselist.get(0);
-
-                        testObject.put("USERID", myId);
-                        testObject.put("LoginNow", true);
-                        testObject.saveInBackground();
-                    } else {
-                        ParseObject testObject = new ParseObject("TestObject");
-
-                        testObject.put("USERID", myId);
-                        testObject.put("LoginNow", true);
-                        testObject.saveInBackground();
-                    }
-                } else {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    private void enableLocationSettings() {
-        Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        startActivity(settingsIntent);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-
-
         TimerTask task = new TimerTask() {
             public void run() {
-                sendLocate();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendLocate(googleMap);
+                    }
+                });
                 getLocate(mem);
             }
         };
 
         Timer timer = new Timer();
-        timer.schedule(task, 10000, 10000);
+        timer.schedule(task, 10000, 5000);
 
     }
 
@@ -149,7 +106,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
             public void run() {
                 for(final String id:name) {
 
-                    if(!name.equals(myId)) {
+//                    if(!id.equals(myId)) {
 
                         try {
 
@@ -175,17 +132,20 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                    }
+//                    }
 
                 }
             }
         }).start();
-
     }
 
 
 
-    public void sendLocate(){
+    public void sendLocate(final GoogleMap googleMap){
+
+        final double lat = googleMap.getMyLocation().getLatitude();
+        final double lon = googleMap.getMyLocation().getLongitude();
+
 
         new Thread(new Runnable() {
             @Override
@@ -201,15 +161,15 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
                     if (query.find().size() != 0) {
                         ParseObject testObject = query.find().get(0);
                         testObject.put("USERID", myId);
-                        testObject.put("Latitude", hereLat);
-                        testObject.put("Longiutude", hereLou);
+                        testObject.put("Latitude", lat);
+                        testObject.put("Longiutude", lon);
                         testObject.setACL(acl);
                         testObject.saveInBackground();
                     } else {
                         ParseObject testObject = new ParseObject("TestObject");
                         testObject.put("USERID", myId);
-                        testObject.put("Latitude", hereLat);
-                        testObject.put("Longiutude", hereLou);
+                        testObject.put("Latitude", lat);
+                        testObject.put("Longiutude", lon);
                         testObject.setACL(acl);
                         testObject.saveInBackground();
                     }
@@ -225,53 +185,30 @@ public class MapsActivity extends FragmentActivity implements LocationListener {
     @Override
     protected void onStop() {
         super.onStop();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-                query.findInBackground(new FindCallback<ParseObject>() {
-                    public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                        if (e == null) {//エラーが無ければ
-                            if (parselist.size() != 0) {
-                                ParseObject testObject = parselist.get(0);
+        Log.d("FinishTest", "onStop");
+    }
 
-                                testObject.put("USERID", myId);
-                                testObject.put("LoginNow", false);
-                                testObject.saveInBackground();
-                            } else {
-                                ParseObject testObject = new ParseObject("TestObject");
+    @Override
+    protected void onDestroy () {
+        Log.d("FinishTest", "onDestroy");
+        super.onDestroy();
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
+        query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
+        try {
+            ParseObject testObject = query.find().get(0);
+            testObject.put("USERID", myId);
+            testObject.put("LoginNow", false);
+            testObject.saveInBackground();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
-                                testObject.put("USERID", myId);
-                                testObject.put("LoginNow", false);
-                                testObject.saveInBackground();
-                            }
-                        } else {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-        }).start();
+
+
 
         ParseUser.logOutInBackground();
 //        finish();
 
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        hereLat = location.getLatitude();
-        hereLou = location.getLongitude();
-        System.out.println("a");
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-    @Override
-    public void onProviderEnabled(String provider) {}
-
-    @Override
-    public void onProviderDisabled(String provider) {}
 }
