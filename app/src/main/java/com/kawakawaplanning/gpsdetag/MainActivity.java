@@ -90,7 +90,7 @@ public class MainActivity extends ActionBarActivity {
                         });
 
                         Intent intent=new Intent();
-                        intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.MapsActivity");
+                        intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");
                         intent.putExtra("name",pref.getString("username", "") );
                         startActivity(intent);
                         finish();
@@ -133,32 +133,10 @@ public class MainActivity extends ActionBarActivity {
                     if (user != null) {
                         Log.d(TAG, "ログイン 成功");
 
-                        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                        query.whereEqualTo("USERID", idet.getText().toString());//そのクエリの中でReceiverがname変数のものを抜き出す。
-                        query.findInBackground(new FindCallback<ParseObject>() {
-                            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                                if (e == null) {//エラーが無ければ
-                                    if (parselist.size() != 0) {
-                                        ParseObject testObject = parselist.get(0);
 
-                                        testObject.put("USERID", idet.getText().toString());
-                                        testObject.put("LoginNow", true);
-                                        testObject.saveInBackground();
-                                    } else {
-                                        ParseObject testObject = new ParseObject("TestObject");
-
-                                        testObject.put("USERID", idet.getText().toString());
-                                        testObject.put("LoginNow", true);
-                                        testObject.saveInBackground();
-                                    }
-                                } else {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
 
                         Intent intent=new Intent();
-                        intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.MapsActivity");
+                        intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");
                         intent.putExtra("name",idet.getText().toString() );
                         startActivity(intent);
                         if (checkBox.isChecked()){
