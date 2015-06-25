@@ -26,6 +26,7 @@
             android:layout_height="wrap_content"
             android:text="ログアウト"
             android:id="@+id/button"
+            android:onClick="onClick"
             android:layout_gravity="left|top" />
     </FrameLayout>
 
