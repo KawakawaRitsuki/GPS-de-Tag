@@ -39,11 +39,12 @@ public class MapsActivity extends FragmentActivity {
     static public String myId;
     private Handler handler; //ThreadUI操作用
 
-    private Map<String, Marker> marker= new HashMap<String, Marker>();
+    private Map<Integer, Marker> marker= new HashMap<Integer, Marker>();
 
     static public String[] mem;
 
     Timer timer;
+    int i ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +104,7 @@ public class MapsActivity extends FragmentActivity {
                         }).start();
 
                     }
-        }, 5000, 5000);
+                }, 5000, 5000);
 
     }
     public boolean isServiceRunning(Context c, Class<?> cls) {
@@ -135,39 +136,48 @@ public class MapsActivity extends FragmentActivity {
     public void getLocate(final String name[]){
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-
+        i = 0;
         for(final String id:name) {
-//                    if(!id.equals(myId)) {
+//          if(!id.equals(myId)) {
 
-            Log.v("tag",id);
-            try {
-                ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);//そのクエリの中でReceiverがname変数のものを抜き出す。
-                ParseObject po = q.find().get(0);
-                final String obId = po.getObjectId();
-                final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
-
-                handler.post(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-
-                                    if (marker.get(id) != null)
-                                        marker.get(id).remove();
-                                    LatLng latLng = new LatLng(que.get(obId).getDouble("Latitude"), que.get(obId).getDouble("Longiutude"));
-                                    MarkerOptions markerOptions = new MarkerOptions();
-                                    markerOptions.position(latLng);
-                                    marker.put(id, googleMap.addMarker(markerOptions));
-                                } catch (ParseException e1) {
-                                    e1.printStackTrace();
-                                }
+                Log.v("tag",id);
+                try {
+                    ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);//そのクエリの中でReceiverがname変数のものを抜き出す。
+                    ParseObject po = q.find().get(0);
+                    final String obId = po.getObjectId();
+                    final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longitude"));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
                             }
-                        });
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-//                   }
+                        }
+                    }).start();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+//          }
         }
+    }
+
+    public void setMarker(final int id,final double lat,final double lon){
+        handler.post(
+                new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (marker.get(id) != null)
+                            marker.get(id).remove();
+                        LatLng latLng = new LatLng(lat, lon);
+                        MarkerOptions markerOptions = new MarkerOptions();
+                        markerOptions.position(latLng);
+                        marker.put(id, googleMap.addMarker(markerOptions));
+
+                    }
+                });
     }
 
 
