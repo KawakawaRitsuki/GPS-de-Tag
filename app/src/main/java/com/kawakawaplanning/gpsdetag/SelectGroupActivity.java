@@ -12,31 +12,35 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.SaveCallback;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class SelectGroupActivity extends ActionBarActivity {
 
 
     private String myId;
-    private ArrayList<String> members;
     private ListView lv;
+    ProgressDialog waitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_group);
+
 
 
         lv = (ListView)findViewById(R.id.listView2);
@@ -47,7 +51,11 @@ public class SelectGroupActivity extends ActionBarActivity {
     }
 
     public void listLoad(){
-        members = new ArrayList<String>();
+
+        final Map<String, String> members = new HashMap<String, String>();
+        List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+
+
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
         List<ParseObject> parselist= null;
         try {
@@ -63,6 +71,7 @@ public class SelectGroupActivity extends ActionBarActivity {
 
             try {
                 String member = que.get(obId).getString("Members");
+                String name = que.get(obId).getString("GroupName");
                 String[] memberSpr = que.get(obId).getString("Members").split(",");
 
                 boolean frag = false;
@@ -71,23 +80,33 @@ public class SelectGroupActivity extends ActionBarActivity {
                         frag = true;
                 }
 
-                if (frag) //そのグループに自分がいたら
-                    members.add(member);
+                if (frag) { //そのグループに自分がいたら
+                    Map<String, String> conMap = new HashMap<String, String>();
+                    members.put(name,member);
+                    conMap.put("Name", name);
+                    conMap.put("Member", "グループID:"+obId);
+                    list.add(conMap);
+                }
 
             } catch (ParseException e1) {
                 e1.printStackTrace();
             }
         }
 
-        final ArrayAdapter adapter = new ArrayAdapter(SelectGroupActivity.this,
-                android.R.layout.simple_list_item_2, members);
+        final SimpleAdapter adapter = new SimpleAdapter(this,list,
+                android.R.layout.simple_list_item_2, new String[] { "Name",
+                "Member" }, new int[] { android.R.id.text1,
+                android.R.id.text2 });
+
         lv.setAdapter(adapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Map<String, String> map = (Map<String, String>)parent.getAdapter().getItem(position);
+
                 SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
                 SharedPreferences.Editor editor = pref.edit();
-                editor.putString("mem", adapter.getItem(position).toString());
+                editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
                 editor.commit();
 
                 Wait("メンバー一覧読み込み");
@@ -95,14 +114,14 @@ public class SelectGroupActivity extends ActionBarActivity {
                 Intent intent = new Intent();
                 intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
                 intent.putExtra("name", myId);
-                intent.putExtra("selectGroup", (String) parent.getItemAtPosition(position));
+                intent.putExtra("selectGroup", members.get(map.get("Name")));
                 startActivity(intent);
                 finish();
             }
         });
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            public boolean onItemLongClick(final AdapterView<?> parent, View view,final int position, long id) {
                 AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                 adb.setCancelable(true);
                 adb.setTitle("確認");
@@ -110,14 +129,51 @@ public class SelectGroupActivity extends ActionBarActivity {
                 adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        Wait("処理");
+                        Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
+                        String mem[] = members.get(map.get("Name")).split(",");
+                        ArrayList<String> arrayList = new ArrayList<String>();
 
-                        listLoad();
+                        for (String str : mem) {
+                            if (!str.equals(myId))
+                                arrayList.add(str);
+                        }
+
+                        ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
+                        query.whereEqualTo("GroupName", map.get("Name"));//そのクエリの中でReceiverがname変数のものを抜き出す。
+
+                        try {
+                            ParseObject testObject = query.find().get(0);
+                            String str = "";
+                            boolean a = true;
+                            for (String s : arrayList) {
+                                if (a) {
+                                    str = s + ",";
+                                    a = false;
+                                } else {
+                                    str = str + s + ",";
+                                }
+                            }
+                            str = str.substring(0, str.length() - 1);
+                            testObject.put("Members", str);
+                            testObject.saveInBackground(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+                                    listLoad();
+                                    waitDialog.dismiss();
+                                }
+                            });
+                        } catch (ParseException e) {
+
+                        }
+
+
                     }
                 });
-                adb.setNegativeButton("Cancel",null);
+                adb.setNegativeButton("Cancel", null);
                 AlertDialog ad = adb.create();
                 ad.show();
-                return false;
+                return true;
             }
         });
     }
@@ -250,7 +306,7 @@ public class SelectGroupActivity extends ActionBarActivity {
         });
     }
     private void Wait(String what){
-        ProgressDialog waitDialog = new ProgressDialog(this);
+        waitDialog = new ProgressDialog(this);
         waitDialog.setMessage(what + "中...");
         waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         waitDialog.setCanceledOnTouchOutside(false);
