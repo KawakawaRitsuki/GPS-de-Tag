@@ -41,30 +41,24 @@ public class SelectGroupActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_group);
 
-
-
         lv = (ListView)findViewById(R.id.listView2);
         myId = getIntent().getStringExtra("name");
 
         listLoad();
-
     }
 
     public void listLoad(){
-
         final Map<String, String> members = new HashMap<String, String>();
         List<Map<String, String>> list = new ArrayList<Map<String, String>>();
 
-
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-        List<ParseObject> parselist= null;
+        List<ParseObject> parseList= null;
         try {
-            parselist = query.find();
+            parseList = query.find();
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
-        for (ParseObject po : parselist) {
+        for (ParseObject po : parseList) {
             final String obId = po.getObjectId();
 
             final ParseQuery<ParseObject> que = ParseQuery.getQuery("Group");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得

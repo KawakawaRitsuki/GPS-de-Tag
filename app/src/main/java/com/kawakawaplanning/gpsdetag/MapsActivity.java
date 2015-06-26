@@ -35,14 +35,10 @@ import java.util.TimerTask;
 public class MapsActivity extends FragmentActivity {
 
     static public GoogleMap googleMap;
-
     static public String myId;
     private Handler handler; //ThreadUI操作用
-
     private Map<Integer, Marker> marker= new HashMap<Integer, Marker>();
-
     static public String[] mem;
-
     Timer timer;
     int i ;
 
@@ -66,11 +62,8 @@ public class MapsActivity extends FragmentActivity {
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
         mapInit();
 
-
-
-
-        if(!isServiceRunning(this,SendGetService.class))
-            startService(new Intent(this, SendGetService.class));
+        if(!isServiceRunning(this,SendService.class))
+            startService(new Intent(this, SendService.class));
 
     }
 
@@ -84,7 +77,7 @@ public class MapsActivity extends FragmentActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        stopService(new Intent(MapsActivity.this, SendGetService.class));
+        stopService(new Intent(MapsActivity.this, SendService.class));
         ParseUser.logOutInBackground();
         finish();
     }
@@ -119,18 +112,9 @@ public class MapsActivity extends FragmentActivity {
         return false;
     }
     private void mapInit() {
-
-        // 地図タイプ設定
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-        // 現在位置ボタンの表示を行なう
         googleMap.setMyLocationEnabled(true);
-
-        // 日本の中心の位置、ズーム設定
-        CameraPosition camerapos = new CameraPosition.Builder()
-                .target(new LatLng(38.2586, 137.6850)).zoom(4.5f).build();
-
-        // 地図の中心の変更する
+        CameraPosition camerapos = new CameraPosition.Builder().target(new LatLng(38.2586, 137.6850)).zoom(4.5f).build();
         googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(camerapos));
     }
 
@@ -139,7 +123,7 @@ public class MapsActivity extends FragmentActivity {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
         i = 0;
         for(final String id:name) {
-//          if(!id.equals(myId)) {
+//          if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
 
                 Log.v("tag",id);
                 try {
@@ -179,7 +163,8 @@ public class MapsActivity extends FragmentActivity {
                         marker.put(id, googleMap.addMarker(markerOptions));
 
                     }
-                });
+                }
+        );
     }
 
 
