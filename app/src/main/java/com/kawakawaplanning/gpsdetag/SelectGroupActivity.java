@@ -1,6 +1,8 @@
 package com.kawakawaplanning.gpsdetag;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
@@ -75,6 +77,11 @@ public class SelectGroupActivity extends ActionBarActivity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("mem", adapter.getItem(position).toString());
+                editor.commit();
+
                 Intent intent=new Intent();
                 intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
                 intent.putExtra("name", myId);

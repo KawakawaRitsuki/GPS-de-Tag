@@ -10,30 +10,21 @@ import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.parse.FindCallback;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
-
-import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
     EditText idet;
     EditText pwet;
-    Button loginButton;
-    Button signinButton;
     CheckBox checkBox;
     View loginView;
-    View signinView;
     String TAG;
     Boolean flag;
     Vibrator vib ;
@@ -55,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
 
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
-        pref = getSharedPreferences("loginpref", Activity.MODE_PRIVATE);
+        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         if(pref.getBoolean("flag", false)){
             Wait("自動ログイン");
 
@@ -65,7 +56,9 @@ public class MainActivity extends ActionBarActivity {
                     if (e == null) {
                         Log.d(TAG, "ログイン 成功");
 
-
+                        editor = pref.edit();
+                        editor.putString("loginid", pref.getString("username", ""));
+                        editor.commit();
 
                         Intent intent=new Intent();
                         intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");
@@ -111,7 +104,8 @@ public class MainActivity extends ActionBarActivity {
                     if (user != null) {
                         Log.d(TAG, "ログイン 成功");
 
-
+                        editor = pref.edit();
+                        editor.putString("loginid", idet.getText().toString());
 
                         Intent intent=new Intent();
                         intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");
