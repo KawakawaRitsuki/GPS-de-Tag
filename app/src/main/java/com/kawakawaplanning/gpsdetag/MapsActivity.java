@@ -86,6 +86,7 @@ public class MapsActivity extends FragmentActivity {
         }
         stopService(new Intent(MapsActivity.this, SendGetService.class));
         ParseUser.logOutInBackground();
+        finish();
     }
 
 
@@ -150,7 +151,7 @@ public class MapsActivity extends FragmentActivity {
                         @Override
                         public void run() {
                             try {
-                                setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longitude"));
+                                setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longiutude"));
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
@@ -159,6 +160,7 @@ public class MapsActivity extends FragmentActivity {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+            i++;
 //          }
         }
     }

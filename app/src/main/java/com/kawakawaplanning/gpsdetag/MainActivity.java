@@ -52,7 +52,7 @@ public class MainActivity extends ActionBarActivity {
 
             ParseUser.logInInBackground(pref.getString("username", ""), pref.getString("password", ""), new LogInCallback() {
                 public void done(ParseUser user, ParseException e) {
-                    waitDialog.dismiss();
+
                     if (e == null) {
                         Log.d(TAG, "ログイン 成功");
 
@@ -61,9 +61,10 @@ public class MainActivity extends ActionBarActivity {
                         editor.commit();
 
                         Intent intent=new Intent();
-                        intent.setClassName("com.kawakawaplanning.gpsdetag","com.kawakawaplanning.gpsdetag.SelectGroupActivity");
-                        intent.putExtra("name",pref.getString("username", "") );
+                        intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.SelectGroupActivity");
+                        intent.putExtra("name", pref.getString("username", ""));
                         startActivity(intent);
+//                        waitDialog.dismiss();
                         finish();
                     }else if (e.getCode() == 100){
                         alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
