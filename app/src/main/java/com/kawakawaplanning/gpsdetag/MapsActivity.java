@@ -51,7 +51,6 @@ public class MapsActivity extends FragmentActivity {
 
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
-        Log.v("tag", pref.getString("mem", ""));
         mem = pref.getString("mem","").split(",");
 
         TextView tv = (TextView) findViewById(R.id.textView);
@@ -131,16 +130,16 @@ public class MapsActivity extends FragmentActivity {
                     ParseObject po = q.find().get(0);
                     final String obId = po.getObjectId();
                     final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
+//                    new Thread(new Runnable() {
+//                        @Override
+//                        public void run() {
                             try {
                                 setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longiutude"));
                             } catch (ParseException e) {
                                 e.printStackTrace();
                             }
-                        }
-                    }).start();
+//                        }
+//                    }).start();
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -155,12 +154,15 @@ public class MapsActivity extends FragmentActivity {
                     @Override
                     public void run() {
 
-                        if (marker.get(id) != null)
-                            marker.get(id).remove();
-                        LatLng latLng = new LatLng(lat, lon);
-                        MarkerOptions markerOptions = new MarkerOptions();
-                        markerOptions.position(latLng);
-                        marker.put(id, googleMap.addMarker(markerOptions));
+                        if (marker.get(id) == null) {
+                            LatLng latLng = new LatLng(lat, lon);
+                            MarkerOptions markerOptions = new MarkerOptions();
+                            markerOptions.position(latLng);
+                            marker.put(id, googleMap.addMarker(markerOptions));
+                        }else{
+                            LatLng latLng = new LatLng(lat, lon);
+                            marker.get(id).setPosition(latLng);
+                        }
 
                     }
                 }

@@ -42,7 +42,9 @@ public class SelectGroupActivity extends ActionBarActivity {
         setContentView(R.layout.activity_select_group);
 
         lv = (ListView)findViewById(R.id.listView2);
-        myId = getIntent().getStringExtra("name");
+
+        SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+        myId = pref.getString("loginid", "");
 
         listLoad();
     }
@@ -107,8 +109,8 @@ public class SelectGroupActivity extends ActionBarActivity {
 
                 Intent intent = new Intent();
                 intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
-                intent.putExtra("name", myId);
-                intent.putExtra("selectGroup", members.get(map.get("Name")));
+//                intent.putExtra("name", myId);
+//                intent.putExtra("selectGroup", members.get(map.get("Name")));
                 startActivity(intent);
                 finish();
             }

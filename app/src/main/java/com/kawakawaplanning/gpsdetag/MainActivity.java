@@ -76,7 +76,7 @@ public class MainActivity extends ActionBarActivity {
 
                         Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
-                        intent.putExtra("name", pref.getString("username", ""));
+//                        intent.putExtra("name", pref.getString("username", ""));
                         startActivity(intent);
                         finish();
                     } else if (e.getCode() == 100) {
@@ -104,7 +104,7 @@ public class MainActivity extends ActionBarActivity {
                         editor.putString("loginid", idEt.getText().toString());
                         Intent intent=new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
-                        intent.putExtra("name", idEt.getText().toString());
+//                        intent.putExtra("name", idEt.getText().toString());
                         startActivity(intent);
                         if (checkBox.isChecked()){
                             editor = pref.edit();

@@ -1,6 +1,8 @@
 package com.kawakawaplanning.gpsdetag;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -33,9 +35,10 @@ public class WaitMemberActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        myId = getIntent().getStringExtra("name");
+        SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+        myId = pref.getString("loginid","");
+        mem = pref.getString("mem","").split(",");
 
-        mem = getIntent().getStringExtra("selectGroup").split(",");
         log = new boolean[mem.length];
 
         LinearLayout ll = new LinearLayout(this);
@@ -136,8 +139,8 @@ public class WaitMemberActivity extends ActionBarActivity {
 
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
-                    intent.putExtra("name", myId);
-                    intent.putExtra("selectGroup", mem);
+//                    intent.putExtra("name", myId);
+//                    intent.putExtra("selectGroup", mem);
                     startActivity(intent);
 
                     timer.cancel();
