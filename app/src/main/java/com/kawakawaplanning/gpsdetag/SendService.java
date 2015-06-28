@@ -29,7 +29,6 @@ public class SendService extends Service implements LocationListener {
     private double lat = 0.0;
     private double lon = 0.0;
     private LocationManager locationManager;
-    private NotificationManager nm;
 
     static public String myId ;
     static public String mem[];
@@ -46,28 +45,11 @@ public class SendService extends Service implements LocationListener {
         locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this); // 位置情報リスナー
 
-        notificate();
+
 
     }
 
-    public void notificate(){
-        Intent _intent = new Intent(this,MapsActivity.class);
-        _intent.putExtra("name",myId);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, _intent,PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setContentIntent(contentIntent);
-        builder.setTicker("GPS de 鬼ごっこは実行中です");
-        builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
-        builder.setContentTitle("GPS de 鬼ごっこ");
-        builder.setContentText("GPS鬼ごっこは実行中です。マップを表示。");
-        builder.setOngoing(true);
-        builder.setWhen(System.currentTimeMillis());
-
-        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        int nId = R.string.app_name;
-        nm.notify(nId, builder.build());
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -93,8 +75,8 @@ public class SendService extends Service implements LocationListener {
     public void onDestroy() {
         timer.cancel();
         locationManager.removeUpdates(this);
-        int nId = R.string.app_name;
-        nm.cancel(nId);
+
+
     }
 
     @Override

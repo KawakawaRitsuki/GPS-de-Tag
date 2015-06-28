@@ -3,12 +3,15 @@ package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -40,7 +43,11 @@ public class MapsActivity extends FragmentActivity {
     private Map<Integer, Marker> marker= new HashMap<Integer, Marker>();
     static public String[] mem;
     Timer timer;
+    private NotificationManager nm;
+
     int i ;
+
+    boolean finish = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +68,19 @@ public class MapsActivity extends FragmentActivity {
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
         mapInit();
 
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int nId = R.string.app_name;
+
+        nm.cancel(nId);
+
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
     }
 
     public void onClick(View v) {
+        finish = true;
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
         query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
         try {
@@ -130,16 +144,11 @@ public class MapsActivity extends FragmentActivity {
                     ParseObject po = q.find().get(0);
                     final String obId = po.getObjectId();
                     final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
-//                    new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-                            try {
-                                setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longiutude"));
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-//                        }
-//                    }).start();
+                    try {
+                        setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longiutude"));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -174,5 +183,27 @@ public class MapsActivity extends FragmentActivity {
     protected void onStop() {
         super.onStop();
         timer.cancel();
+        notificate();
+    }
+
+    public void notificate(){
+        if(!finish) {
+            Intent _intent = new Intent(this, MapsActivity.class);
+            _intent.putExtra("name", myId);
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+            builder.setContentIntent(contentIntent);
+            builder.setTicker("GPS de 鬼ごっこは実行中です");
+            builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
+            builder.setContentTitle("GPS de 鬼ごっこ");
+            builder.setContentText("GPS鬼ごっこは実行中です。マップを表示。");
+            builder.setOngoing(true);
+            builder.setWhen(System.currentTimeMillis());
+
+
+            int nId = R.string.app_name;
+            nm.notify(nId, builder.build());
+        }
     }
 }
