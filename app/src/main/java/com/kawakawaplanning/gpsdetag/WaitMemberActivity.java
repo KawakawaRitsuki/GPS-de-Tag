@@ -28,6 +28,7 @@ public class WaitMemberActivity extends ActionBarActivity {
     private ImageView iv[];
     private String myId;
     private String mem[];
+    private String groupId;
     private boolean log[];
     private Timer timer;
 
@@ -36,8 +37,9 @@ public class WaitMemberActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
-        myId = pref.getString("loginid","");
-        mem = pref.getString("mem","").split(",");
+        myId = pref.getString("loginid", "");
+        mem = pref.getString("mem", "").split(",");
+        groupId = getIntent().getStringExtra("GroupId");
 
         log = new boolean[mem.length];
 
@@ -50,13 +52,11 @@ public class WaitMemberActivity extends ActionBarActivity {
         textTitle.setTextSize(20);
         ll.addView(textTitle, 0);
 
-
-
         setContentView(ll);
 
         iv = new ImageView[mem.length];
 
-        for (int a = 0; a != iv.length; a++) {//グループの人数分生成
+        for (int a = 0; a != iv.length; a++) {//グループの人数分Viewを生成
             LinearLayout linearLayout = new LinearLayout(this);
             iv[a] = new ImageView(this);
             if (loginNow(mem[a])) {
@@ -90,13 +90,13 @@ public class WaitMemberActivity extends ActionBarActivity {
                         ParseObject testObject = parselist.get(0);
 
                         testObject.put("USERID", myId);
-                        testObject.put("LoginNow", true);
+                        testObject.put("LoginNow", groupId);
                         testObject.saveInBackground();
                     } else {
                         ParseObject testObject = new ParseObject("TestObject");
 
                         testObject.put("USERID", myId);
-                        testObject.put("LoginNow", true);
+                        testObject.put("LoginNow", groupId);
                         testObject.saveInBackground();
                     }
                 } else {
@@ -166,7 +166,12 @@ public class WaitMemberActivity extends ActionBarActivity {
             final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
 
             try {
-                return que.get(obId).getBoolean("LoginNow");
+                if(groupId.equals(que.get(obId).getString("LoginNow"))){
+                    return true;
+                }else{
+                    return false;
+                }
+
             } catch (ParseException e1) {
                 e1.printStackTrace();
             }

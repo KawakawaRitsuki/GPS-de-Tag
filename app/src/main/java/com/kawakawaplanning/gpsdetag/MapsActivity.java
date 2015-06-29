@@ -85,7 +85,7 @@ public class MapsActivity extends FragmentActivity {
         query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
         try {
             ParseObject testObject = query.find().get(0);
-            testObject.put("LoginNow", false);
+            testObject.put("LoginNow", "gB9xRLYJ3V4x");
             testObject.saveInBackground();
         } catch (ParseException e) {
             e.printStackTrace();

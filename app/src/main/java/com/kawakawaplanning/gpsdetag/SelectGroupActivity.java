@@ -98,7 +98,7 @@ public class SelectGroupActivity extends ActionBarActivity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Map<String, String> map = (Map<String, String>)parent.getAdapter().getItem(position);
+                Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
 
                 SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
                 SharedPreferences.Editor editor = pref.edit();
@@ -109,7 +109,7 @@ public class SelectGroupActivity extends ActionBarActivity {
 
                 Intent intent = new Intent();
                 intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
-//                intent.putExtra("name", myId);
+                intent.putExtra("GroupId", map.get("Member").substring(7));
 //                intent.putExtra("selectGroup", members.get(map.get("Name")));
                 startActivity(intent);
                 finish();
@@ -117,7 +117,7 @@ public class SelectGroupActivity extends ActionBarActivity {
         });
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(final AdapterView<?> parent, View view,final int position, long id) {
+            public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
                 AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                 adb.setCancelable(true);
                 adb.setTitle("確認");
@@ -193,7 +193,15 @@ public class SelectGroupActivity extends ActionBarActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         final String str = et1.getEditableText().toString();
-                        if (!str.isEmpty()) {
+                        if (str.equals("gB9xRLYJ3V4x")) {
+                            AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                            adb.setCancelable(true);
+                            adb.setTitle("グループ作成失敗");
+                            adb.setMessage("システムエラーが発生しました。グループ名を変えてもう一度作成してください。");
+                            adb.setPositiveButton("OK", null);
+                            AlertDialog ad = adb.create();
+                            ad.show();
+                        } else if (!str.isEmpty()) {
 
                             ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
                             query.whereEqualTo("GroupName", str);//そのクエリの中でReceiverがname変数のものを抜き出す。
@@ -213,7 +221,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                                     AlertDialog ad = adb.create();
                                     ad.show();
                                     listLoad();
-                                }else{
+                                } else {
                                     AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                                     adb.setCancelable(true);
                                     adb.setTitle("グループ作成失敗");
