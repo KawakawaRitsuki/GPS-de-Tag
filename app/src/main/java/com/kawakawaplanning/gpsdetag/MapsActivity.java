@@ -15,7 +15,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,6 +49,8 @@ public class MapsActivity extends FragmentActivity {
     static public String[] mem;
     Timer timer;
     private NotificationManager nm;
+    LinearLayout chatLl;
+    ImageView chatIv;
 
     int i ;
 
@@ -58,15 +61,23 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        chatLl = (LinearLayout)findViewById(R.id.chatLL);
+        chatIv = (ImageView)findViewById(R.id.chatCloseBtn);
+
+        chatIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chatIv.setVisibility(View.INVISIBLE);
+                chatLl.setVisibility(View.INVISIBLE);
+            }
+        });
+
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
         mem = pref.getString("mem","").split(",");
         groupId = pref.getString("groupId", "");
-
-        TextView tv = (TextView) findViewById(R.id.textView);
-        tv.setText("ようこそ！" + myId + "さん");
 
         handler = new Handler();
 
@@ -98,6 +109,11 @@ public class MapsActivity extends FragmentActivity {
         stopService(new Intent(MapsActivity.this, SendService.class));
         ParseUser.logOutInBackground();
         finish();
+    }
+
+    public void chatBtn(View v){
+        chatIv.setVisibility(View.VISIBLE);
+        chatLl.setVisibility(View.VISIBLE);
     }
 
 
