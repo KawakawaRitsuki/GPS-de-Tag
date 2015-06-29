@@ -103,14 +103,13 @@ public class SelectGroupActivity extends ActionBarActivity {
                 SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
                 SharedPreferences.Editor editor = pref.edit();
                 editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
+                editor.putString("groupId" , map.get("Member").substring(7));
                 editor.commit();
 
                 Wait("メンバー一覧読み込み");
 
                 Intent intent = new Intent();
                 intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
-                intent.putExtra("GroupId", map.get("Member").substring(7));
-//                intent.putExtra("selectGroup", members.get(map.get("Name")));
                 startActivity(intent);
                 finish();
             }

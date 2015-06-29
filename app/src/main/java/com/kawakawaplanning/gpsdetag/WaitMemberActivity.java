@@ -39,7 +39,7 @@ public class WaitMemberActivity extends ActionBarActivity {
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
         mem = pref.getString("mem", "").split(",");
-        groupId = getIntent().getStringExtra("GroupId");
+        groupId = pref.getString("groupId", "");
 
         log = new boolean[mem.length];
 

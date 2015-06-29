@@ -3,6 +3,7 @@ package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -29,6 +30,8 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ public class MapsActivity extends FragmentActivity {
 
     static public GoogleMap googleMap;
     static public String myId;
+    private String groupId;
     private Handler handler; //ThreadUI操作用
     private Map<Integer, Marker> marker= new HashMap<Integer, Marker>();
     static public String[] mem;
@@ -59,6 +63,7 @@ public class MapsActivity extends FragmentActivity {
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
         mem = pref.getString("mem","").split(",");
+        groupId = pref.getString("groupId", "");
 
         TextView tv = (TextView) findViewById(R.id.textView);
         tv.setText("ようこそ！" + myId + "さん");
@@ -136,7 +141,7 @@ public class MapsActivity extends FragmentActivity {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
         i = 0;
         for(final String id:name) {
-//          if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
+//            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
 
                 Log.v("tag",id);
                 try {
@@ -144,16 +149,35 @@ public class MapsActivity extends FragmentActivity {
                     ParseObject po = q.find().get(0);
                     final String obId = po.getObjectId();
                     final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
-                    try {
-                        setMarker(i,que.get(obId).getDouble("Latitude"),que.get(obId).getDouble("Longiutude"));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
+                    if(que.get(obId).getString("LoginNow").equals(groupId)) {
+                        try {
+                            setMarker(i, que.get(obId).getDouble("Latitude"), que.get(obId).getDouble("Longiutude"));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                marker.get(i).remove();
+                                AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+                                adb.setCancelable(true);
+                                adb.setTitle("通知");
+                                adb.setMessage(id + "さんが退出しました");
+                                adb.setPositiveButton("OK", null);
+                                AlertDialog ad = adb.create();
+                                ad.show();
+                                List<String> list = new ArrayList<String>(Arrays.asList(mem)); // 新インスタンスを生成
+                                list.remove(id);
+                                mem = (String[]) list.toArray(new String[list.size()]);
+                            }
+                        });
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
             i++;
-//          }
+//            }
         }
     }
 
