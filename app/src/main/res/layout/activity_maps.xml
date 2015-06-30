@@ -52,10 +52,26 @@
                 android:textSize="24dp"
                 android:layout_weight="1" />
 
-            <EditText
+            <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/editText" />
+                android:layout_gravity="center_horizontal">
+
+                <Spinner
+                    android:layout_width="89dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinner" />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/chatEt"
+                    android:textSize="20dp"
+                    android:textColor="#FFFFFF"
+                    android:inputType="text" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <ImageView
