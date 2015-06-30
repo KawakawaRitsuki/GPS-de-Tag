@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -29,6 +30,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -55,6 +57,7 @@ public class MapsActivity extends FragmentActivity {
     private NotificationManager nm;
     LinearLayout chatLl;
     ImageView chatIv;
+    TextView chatTv;
     EditText chatEt;
     Spinner spinner;
 
@@ -70,6 +73,7 @@ public class MapsActivity extends FragmentActivity {
         chatLl = (LinearLayout)findViewById(R.id.chatLL);
         chatIv = (ImageView)findViewById(R.id.chatCloseBtn);
         chatEt = (EditText)findViewById(R.id.chatEt);
+        chatTv = (TextView)findViewById(R.id.chatTv);
 
         chatEt.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -134,6 +138,8 @@ public class MapsActivity extends FragmentActivity {
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
+        receiveChat();
+
     }
 
     public void onClick(View v) {
@@ -157,6 +163,29 @@ public class MapsActivity extends FragmentActivity {
         chatLl.setVisibility(View.VISIBLE);
     }
 
+    String temp;
+
+    public void receiveChat(){
+        temp = "";
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
+//        query.whereEqualTo("Receiver", name);
+//        query.whereEqualTo("Receiver", name);
+        query.findInBackground(new FindCallback<ParseObject>() {
+            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
+                if (e == null) {//エラーが無ければ
+                    for (ParseObject parseObject : parselist) {
+                        String message = parseObject.getString("Message");
+                        String from = parseObject.getString("From");
+                        String to = parseObject.getString("To");
+                        if(to.equals(myId) || to.equals("All") || from.equals(myId))
+                            temp = temp + from + ":" + message + "\n";
+                    }
+                    chatTv.setText(temp);
+                }
+            }
+        });
+    }
 
     @Override
     protected void onResume() {

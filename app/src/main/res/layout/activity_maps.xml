@@ -45,8 +45,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:text="AMLover44:テスト\nkawakawaritsuki:了解"
-                android:id="@+id/textView5"
+                android:id="@+id/chatTv"
                 android:textColor="#FFFFFF"
                 android:gravity="bottom"
                 android:textSize="24dp"
