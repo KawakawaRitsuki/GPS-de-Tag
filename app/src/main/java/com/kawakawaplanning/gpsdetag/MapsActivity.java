@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -129,11 +128,7 @@ public class MapsActivity extends FragmentActivity {
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
         mapInit();
 
-        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        int nId = R.string.app_name;
-
-        nm.cancel(nId);
 
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
@@ -174,7 +169,7 @@ public class MapsActivity extends FragmentActivity {
                         String message = parseObject.getString("Message");
                         String from = parseObject.getString("From");
                         String to = parseObject.getString("To");
-                        if(to.equals(myId) || to.equals("All") || from.equals(myId))
+                        if (to.equals(myId) || to.equals("All") || from.equals(myId))
                             temp = temp + from + ":" + message + "\n";
                     }
                     chatTv.setText(temp);
@@ -200,7 +195,10 @@ public class MapsActivity extends FragmentActivity {
 
                     }
                 }, 5000, 5000);
-
+        
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        int nId = R.string.app_name;
+        nm.cancel(nId);
     }
     public boolean isServiceRunning(Context c, Class<?> cls) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
@@ -224,9 +222,7 @@ public class MapsActivity extends FragmentActivity {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
         i = 0;
         for(final String id:name) {
-//            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
-
-                Log.v("tag",id);
+            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
                 try {
                     ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);//そのクエリの中でReceiverがname変数のものを抜き出す。
                     ParseObject po = q.find().get(0);
@@ -260,7 +256,7 @@ public class MapsActivity extends FragmentActivity {
                     e.printStackTrace();
                 }
             i++;
-//            }
+            }
         }
     }
 
