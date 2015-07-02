@@ -61,6 +61,7 @@ public class SelectGroupActivity extends ActionBarActivity {
     List<Map<String, String>> list;
 
     private void listLoad(){
+        Wait("グループ読み込み");
         members = new HashMap();
         list = new ArrayList();
 
@@ -99,6 +100,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                                 lv.setAdapter(adapter);
                                 lv.setOnItemClickListener(onItem);
                                 lv.setOnItemLongClickListener(onItemLong);
+                                waitDialog.dismiss();
                             }
                         });
 
@@ -108,9 +110,6 @@ public class SelectGroupActivity extends ActionBarActivity {
                 }
             }
         });
-
-
-
     }
 
     private AdapterView.OnItemClickListener onItem = new AdapterView.OnItemClickListener() {
@@ -121,15 +120,13 @@ public class SelectGroupActivity extends ActionBarActivity {
             SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
             SharedPreferences.Editor editor = pref.edit();
             editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
-            editor.putString("groupId" , map.get("Member").substring(7));
+            editor.putString("groupId", map.get("Member").substring(7));
             editor.commit();
-
-            Wait("メンバー一覧読み込み");
 
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
             startActivity(intent);
-            finish();
+
         }
     };
 
@@ -300,20 +297,24 @@ public class SelectGroupActivity extends ActionBarActivity {
                         String[] st = po.getString("Members").split(",");
                         String string = po.getString("Members");
 
-                        boolean f = true;
-                        for (String s : st) {
-                            if (s.equals(myId))
-                                f = false;
-                        }
+                        if(st.length > 5) {
+                            boolean f = true;
+                            for (String s : st) {
+                                if (s.equals(myId))
+                                    f = false;
+                            }
 
-                        if (f) {
-                            string = string + "," + myId;
-                            po.put("Members", string);
-                            po.saveInBackground();
-                            alertDialog.dismiss();
-                            listLoad();
-                        } else {
-                            et1.setError("すでにログインしています");
+                            if (f) {
+                                string = string + "," + myId;
+                                po.put("Members", string);
+                                po.saveInBackground();
+                                alertDialog.dismiss();
+                                listLoad();
+                            } else {
+                                et1.setError("すでにログインしています");
+                            }
+                        }else{
+                            et1.setError("一つのグループには5人までしかログインできません。");
                         }
 
                     } catch (ParseException e) {

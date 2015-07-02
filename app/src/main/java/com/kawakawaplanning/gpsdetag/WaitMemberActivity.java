@@ -6,8 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Gravity;
-import android.widget.FrameLayout;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,11 +25,41 @@ import java.util.TimerTask;
 public class WaitMemberActivity extends ActionBarActivity {
 
     private ImageView iv[];
+    private LinearLayout ll[];
+    private TextView tv[];
+    
     private String myId;
     private String mem[];
     private String groupId;
     private boolean log[];
     private Timer timer;
+    private Handler mHandler;
+
+    private void findView() {
+        iv = new ImageView[5];
+        iv[0] = (ImageView) findViewById(R.id.iv1);
+        iv[1] = (ImageView) findViewById(R.id.iv2);
+        iv[2] = (ImageView) findViewById(R.id.iv3);
+        iv[3] = (ImageView) findViewById(R.id.iv4);
+        iv[4] = (ImageView) findViewById(R.id.iv5);
+        
+        ll = new LinearLayout[5];
+        ll[0] = (LinearLayout) findViewById(R.id.ll1);
+        ll[1] = (LinearLayout) findViewById(R.id.ll2);
+        ll[2] = (LinearLayout) findViewById(R.id.ll3);
+        ll[3] = (LinearLayout) findViewById(R.id.ll4);
+        ll[4] = (LinearLayout) findViewById(R.id.ll5);
+
+        tv = new TextView[5];
+        tv[0] = (TextView) findViewById(R.id.tv1);
+        tv[1] = (TextView) findViewById(R.id.tv2);
+        tv[2] = (TextView) findViewById(R.id.tv3);
+        tv[3] = (TextView) findViewById(R.id.tv4);
+        tv[4] = (TextView) findViewById(R.id.tv5);
+        
+        for(int i=0; i != mem.length;i++)
+            ll[i].setVisibility(View.VISIBLE);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,43 +69,17 @@ public class WaitMemberActivity extends ActionBarActivity {
         myId = pref.getString("loginid", "");
         mem = pref.getString("mem", "").split(",");
         groupId = pref.getString("groupId", "");
+        mHandler = new Handler();
+
+        setContentView(R.layout.activity_member_wait);
+
+        findView();
+
+        for(int i = 0; i != mem.length;i++){
+            tv[i].setText(mem[i]);
+        }
 
         log = new boolean[mem.length];
-
-        LinearLayout ll = new LinearLayout(this);
-        ll.setOrientation(LinearLayout.VERTICAL);
-        ll.setPadding(16, 16, 16, 16);
-
-        TextView textTitle = new TextView(this);
-        textTitle.setText("メンバーのログインを待っています");
-        textTitle.setTextSize(20);
-        ll.addView(textTitle, 0);
-
-        setContentView(ll);
-
-        iv = new ImageView[mem.length];
-
-        for (int a = 0; a != iv.length; a++) {//グループの人数分Viewを生成
-            LinearLayout linearLayout = new LinearLayout(this);
-            iv[a] = new ImageView(this);
-            if (loginNow(mem[a])) {
-                iv[a].setImageResource(R.drawable.icon_success);
-                log[a] = true;
-            } else {
-                iv[a].setImageResource(R.drawable.icon_error);
-                log[a] = false;
-            }
-            iv[a].setLayoutParams(new FrameLayout.LayoutParams(100, 100));
-            TextView tv = new TextView(this);
-            tv.setText(mem[a]);
-            tv.setTextSize(20);
-            tv.setGravity(Gravity.CENTER);
-
-            linearLayout.addView(iv[a], 0);
-            linearLayout.addView(tv, 1);
-
-            ll.addView(linearLayout, a + 1);
-        }
 
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
@@ -88,13 +91,11 @@ public class WaitMemberActivity extends ActionBarActivity {
                 if (e == null) {//エラーが無ければ
                     if (parselist.size() != 0) {
                         ParseObject testObject = parselist.get(0);
-
                         testObject.put("USERID", myId);
                         testObject.put("LoginNow", groupId);
                         testObject.saveInBackground();
                     } else {
                         ParseObject testObject = new ParseObject("TestObject");
-
                         testObject.put("USERID", myId);
                         testObject.put("LoginNow", groupId);
                         testObject.saveInBackground();
@@ -118,7 +119,7 @@ public class WaitMemberActivity extends ActionBarActivity {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        for (int a = 0; a != iv.length; a++) {
+                        for (int a = 0; a != mem.length; a++) {
                             if (loginNow(mem[a])) {
                                 iv[a].setImageResource(R.drawable.icon_success);
                                 log[a] = true;
@@ -139,18 +140,11 @@ public class WaitMemberActivity extends ActionBarActivity {
 
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
-//                    intent.putExtra("name", myId);
-//                    intent.putExtra("selectGroup", mem);
                     startActivity(intent);
-
                     timer.cancel();
-
-                    finish();
                 }
             }
         };
-
-
         timer.schedule(task, 1000, 1000);
     }
 
