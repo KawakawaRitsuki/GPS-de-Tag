@@ -138,8 +138,6 @@ public class MapsActivity extends FragmentActivity {
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
-        receiveChat();
-
     }
 
     public void onClick(View v) {
@@ -169,8 +167,6 @@ public class MapsActivity extends FragmentActivity {
         temp = "";
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
-//        query.whereEqualTo("Receiver", name);
-//        query.whereEqualTo("Receiver", name);
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
                 if (e == null) {//エラーが無ければ
@@ -198,6 +194,7 @@ public class MapsActivity extends FragmentActivity {
                             @Override
                             public void run() {
                                 getLocate(mem);
+                                receiveChat();
                             }
                         }).start();
 
