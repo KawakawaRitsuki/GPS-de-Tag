@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -136,19 +137,30 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void onClick(View v) {
-        finish = true;
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-        query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-        try {
-            ParseObject testObject = query.find().get(0);
-            testObject.put("LoginNow", "gB9xRLYJ3V4x");
-            testObject.saveInBackground();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        stopService(new Intent(MapsActivity.this, SendService.class));
-        ParseUser.logOutInBackground();
-        finish();
+        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+        adb.setTitle("確認");
+        adb.setMessage("本当にログアウトしますか？");
+        adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish = true;
+                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
+                query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
+                query.findInBackground(new FindCallback<ParseObject>() {
+                    @Override
+                    public void done(List<ParseObject> list, ParseException e) {
+                        ParseObject testObject = list.get(0);
+                        testObject.put("LoginNow", "gB9xRLYJ3V4x");
+                        testObject.saveInBackground();
+                    }
+                });
+                stopService(new Intent(MapsActivity.this, SendService.class));
+                ParseUser.logOutInBackground();
+                finish();
+            }
+        });
+        adb.setNegativeButton("Cancel",null);
+        adb.show();
     }
 
     public void chatBtn(View v){

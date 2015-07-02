@@ -142,6 +142,7 @@ public class WaitMemberActivity extends ActionBarActivity {
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     startActivity(intent);
                     timer.cancel();
+                    finish();
                 }
             }
         };
