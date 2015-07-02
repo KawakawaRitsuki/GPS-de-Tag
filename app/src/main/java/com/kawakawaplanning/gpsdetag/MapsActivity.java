@@ -14,7 +14,13 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -24,6 +30,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -48,6 +55,11 @@ public class MapsActivity extends FragmentActivity {
     static public String[] mem;
     Timer timer;
     private NotificationManager nm;
+    LinearLayout chatLl;
+    ImageView chatIv;
+    TextView chatTv;
+    EditText chatEt;
+    Spinner spinner;
 
     int i ;
 
@@ -58,6 +70,40 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        chatLl = (LinearLayout)findViewById(R.id.chatLL);
+        chatIv = (ImageView)findViewById(R.id.chatCloseBtn);
+        chatEt = (EditText)findViewById(R.id.chatEt);
+        chatTv = (TextView)findViewById(R.id.chatTv);
+
+        chatEt.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN
+                        && keyCode == KeyEvent.KEYCODE_ENTER) {
+                    try {
+                        ParseObject groupObject = new ParseObject(groupId);
+                        groupObject.put("Message", chatEt.getEditableText().toString());
+                        groupObject.put("From", myId);
+                        groupObject.put("To", spinner.getSelectedItem().toString());
+                        groupObject.save();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    chatEt.setText(null);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        chatIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chatIv.setVisibility(View.INVISIBLE);
+                chatLl.setVisibility(View.INVISIBLE);
+            }
+        });
+
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
@@ -65,8 +111,18 @@ public class MapsActivity extends FragmentActivity {
         mem = pref.getString("mem","").split(",");
         groupId = pref.getString("groupId", "");
 
-        TextView tv = (TextView) findViewById(R.id.textView);
-        tv.setText("ようこそ！" + myId + "さん");
+        spinner = (Spinner)findViewById(R.id.spinner);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.add("All");
+        // アイテムを追加します
+        for (String str:mem){
+            if(!str.equals(myId))
+                adapter.add(str);
+        }
+        spinner.setAdapter(adapter);
+
 
         handler = new Handler();
 
@@ -100,6 +156,32 @@ public class MapsActivity extends FragmentActivity {
         finish();
     }
 
+    public void chatBtn(View v){
+        chatIv.setVisibility(View.VISIBLE);
+        chatLl.setVisibility(View.VISIBLE);
+    }
+
+    String temp;
+
+    public void receiveChat(){
+        temp = "";
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
+        query.findInBackground(new FindCallback<ParseObject>() {
+            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
+                if (e == null) {//エラーが無ければ
+                    for (ParseObject parseObject : parselist) {
+                        String message = parseObject.getString("Message");
+                        String from = parseObject.getString("From");
+                        String to = parseObject.getString("To");
+                        if(to.equals(myId) || to.equals("All") || from.equals(myId))
+                            temp = temp + from + ":" + message + "\n";
+                    }
+                    chatTv.setText(temp);
+                }
+            }
+        });
+    }
 
     @Override
     protected void onResume() {
@@ -112,6 +194,7 @@ public class MapsActivity extends FragmentActivity {
                             @Override
                             public void run() {
                                 getLocate(mem);
+                                receiveChat();
                             }
                         }).start();
 

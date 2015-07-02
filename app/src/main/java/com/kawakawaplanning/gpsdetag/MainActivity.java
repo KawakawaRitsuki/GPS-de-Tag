@@ -21,13 +21,12 @@ import com.parse.SignUpCallback;
 
 public class MainActivity extends ActionBarActivity {
 
-    private EditText idEt;
-    private EditText pwEt;
-    private CheckBox checkBox;
-    private String TAG = "KP";
-    private Vibrator vib;
+    private EditText mIdEt;
+    private EditText mPwEt;
+    private CheckBox mCheckBox;
+    private Vibrator mVib;
     private ProgressDialog waitDialog;
-    private AlertDialog.Builder alertDialogBuilder;
+    private AlertDialog ad;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
 
@@ -35,22 +34,22 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        idEt =      (EditText) findViewById     (R.id.idedit);
-        pwEt =      (EditText) findViewById     (R.id.pwedit);
-        checkBox =  (CheckBox) findViewById     (R.id.checkBox1);
-        vib =       (Vibrator) getSystemService (VIBRATOR_SERVICE);
-
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
-
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
 
+        findView();
         autoLogin();
+    }
 
+    private void findView(){
+        mIdEt =      (EditText) findViewById     (R.id.idedit);
+        mPwEt =      (EditText) findViewById     (R.id.pwedit);
+        mCheckBox =  (CheckBox) findViewById     (R.id.checkBox1);
+        mVib =       (Vibrator) getSystemService (VIBRATOR_SERVICE);
     }
 
     public void onClick(View v){
-        vib.vibrate(50);
+        mVib.vibrate(50);
         switch (v.getId()) {
             case R.id.loginbutton:
                 login();
@@ -60,11 +59,10 @@ public class MainActivity extends ActionBarActivity {
                 signup();
                 break;
         }
-
     }
 
     public void autoLogin(){
-        if(pref.getBoolean("flag", false)){
+        if(pref.getBoolean("AutoLogin", false)){
             Wait("自動ログイン");
 
             ParseUser.logInInBackground(pref.getString("username", ""), pref.getString("password", ""), new LogInCallback() {
@@ -74,11 +72,12 @@ public class MainActivity extends ActionBarActivity {
                         editor.putString("loginid", pref.getString("username", ""));
                         editor.commit();
 
+                        waitDialog.dismiss();
+
                         Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
-//                        intent.putExtra("name", pref.getString("username", ""));
                         startActivity(intent);
-                        finish();
+//                        finish();
                     } else if (e.getCode() == 100) {
                         alert("接続エラー", "サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
                     } else {
@@ -92,36 +91,43 @@ public class MainActivity extends ActionBarActivity {
 
     public void login(){
         Wait("ログイン");
-        String putId = idEt.getText().toString();
+        String putId = mIdEt.getText().toString();
         if (putId == null){
             alert("入力エラー","IDが入力されていません。入力してください。");
         }else{
-            ParseUser.logInInBackground(idEt.getText().toString(), pwEt.getText().toString(), new LogInCallback() {
+            ParseUser.logInInBackground(mIdEt.getText().toString(), mPwEt.getText().toString(), new LogInCallback() {
                 public void done(ParseUser user, ParseException e) {
                     waitDialog.dismiss();
                     if (user != null) {
+
                         editor = pref.edit();
-                        editor.putString("loginid", idEt.getText().toString());
-                        Intent intent=new Intent();
+                        editor.putString("loginid", mIdEt.getText().toString());
+                        Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
-//                        intent.putExtra("name", idEt.getText().toString());
                         startActivity(intent);
-                        if (checkBox.isChecked()){
+
+                        if (mCheckBox.isChecked()) {
                             editor = pref.edit();
-                            editor.putString("username", idEt.getText().toString());
-                            editor.putString("password", pwEt.getText().toString());
-                            editor.putBoolean("flag",true);
+                            editor.putString("username", mIdEt.getText().toString());
+                            editor.putString("password", mPwEt.getText().toString());
+                            editor.putBoolean("AutoLogin", true);
                             editor.commit();
                         }
+
                         finish();
 
-                    } else if (e.getCode() == 101){
-                        alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:101");
-                    } else if (e.getCode() == 100){
-                        alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                    }else{
-                        alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-
+                    } else {
+                        switch (e.getCode()){
+                            case 101:
+                                alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:101");
+                                break;
+                            case 100:
+                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                                break;
+                            default:
+                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                                break;
+                        }
                     }
                 }
 
@@ -131,24 +137,34 @@ public class MainActivity extends ActionBarActivity {
 
     public void signup(){
 
-        if( idEt.getText().toString().length() <= 3 && pwEt.getText().toString().length() <= 5){
+        if( mIdEt.getText().toString().length() <= 3 && mPwEt.getText().toString().length() <= 5){
             alert("入力エラー","IDは4文字以上・PWは6文字以上にしてください。");
         } else {
             Wait("サインアップ");
             ParseUser user = new ParseUser();
-            user.setUsername(idEt.getText().toString());
-            user.setPassword(pwEt.getText().toString());
+
+            user.setUsername(mIdEt.getText().toString());
+            user.setPassword(mPwEt.getText().toString());
+
             user.signUpInBackground(new SignUpCallback() {
                 public void done(ParseException e) {
+
                     waitDialog.dismiss();
+
                     if (e == null) {
                         alert("登録完了","会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
-                    } else if (e.getCode() == 202){
-                        alert("登録エラー","このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
-                    } else if (e.getCode() == 100){
-                        alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                    }else{
-                        alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                    } else {
+                        switch (e.getCode()){
+                            case 202:
+                                alert("登録エラー","このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
+                                break;
+                            case 100:
+                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                                break;
+                            default:
+                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                                break;
+                        }
                     }
                 }
             });
@@ -163,10 +179,12 @@ public class MainActivity extends ActionBarActivity {
         waitDialog.show();
     }
     private void alert(String til,String msg){
-        alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
-        alertDialogBuilder.setTitle(til);
-        alertDialogBuilder.setMessage(msg);
-        alertDialogBuilder.setPositiveButton("OK",null);
-        alertDialogBuilder.show();
+        AlertDialog.Builder adb = new AlertDialog.Builder(MainActivity.this);
+        adb.setTitle(til);
+        adb.setMessage(msg);
+        adb.setPositiveButton("OK", null);
+        adb.show();
+        ad = adb.create();
+        ad.show();
     }
 }

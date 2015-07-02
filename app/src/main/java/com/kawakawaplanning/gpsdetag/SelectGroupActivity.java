@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -34,144 +36,159 @@ public class SelectGroupActivity extends ActionBarActivity {
 
     private String myId;
     private ListView lv;
-    ProgressDialog waitDialog;
+    private ProgressDialog waitDialog;
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_group);
 
-        lv = (ListView)findViewById(R.id.listView2);
-
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
+        mHandler = new Handler();
 
+        findView();
         listLoad();
     }
 
-    public void listLoad(){
-        final Map<String, String> members = new HashMap<String, String>();
-        List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+    private void findView(){
+        lv = (ListView)findViewById(R.id.listView2);
+    }
+
+
+    Map<String, String> members;
+    List<Map<String, String>> list;
+
+    private void listLoad(){
+        members = new HashMap();
+        list = new ArrayList();
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-        List<ParseObject> parseList= null;
-        try {
-            parseList = query.find();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        for (ParseObject po : parseList) {
-            final String obId = po.getObjectId();
-
-            final ParseQuery<ParseObject> que = ParseQuery.getQuery("Group");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
-
-            try {
-                String member = que.get(obId).getString("Members");
-                String name = que.get(obId).getString("GroupName");
-                String[] memberSpr = que.get(obId).getString("Members").split(",");
-
-                boolean frag = false;
-                for (String str : memberSpr) {
-                    if (str.equals(myId))
-                        frag = true;
-                }
-
-                if (frag) { //そのグループに自分がいたら
-                    Map<String, String> conMap = new HashMap<String, String>();
-                    members.put(name,member);
-                    conMap.put("Name", name);
-                    conMap.put("Member", "グループID:"+obId);
-                    list.add(conMap);
-                }
-
-            } catch (ParseException e1) {
-                e1.printStackTrace();
-            }
-        }
-
-        final SimpleAdapter adapter = new SimpleAdapter(this,list,
-                android.R.layout.simple_list_item_2, new String[] { "Name",
-                "Member" }, new int[] { android.R.id.text1,
-                android.R.id.text2 });
-
-        lv.setAdapter(adapter);
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        query.findInBackground(new FindCallback<ParseObject>() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
+            public void done(List<ParseObject> parseList, ParseException e) {
+                for (ParseObject po : parseList) {
+                    final String obId = po.getObjectId();
 
-                SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
-                SharedPreferences.Editor editor = pref.edit();
-                editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
-                editor.putString("groupId" , map.get("Member").substring(7));
-                editor.commit();
+                    final ParseQuery<ParseObject> que = ParseQuery.getQuery("Group");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
 
-                Wait("メンバー一覧読み込み");
+                    try {
+                        String member = que.get(obId).getString("Members");
+                        String name = que.get(obId).getString("GroupName");
+                        String[] memberSpr = que.get(obId).getString("Members").split(",");
 
-                Intent intent = new Intent();
-                intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
-                startActivity(intent);
-                finish();
+                        boolean frag = false;
+                        for (String str : memberSpr) {
+                            if (str.equals(myId))
+                                frag = true;
+                        }
+
+                        if (frag) { //そのグループに自分がいたら
+                            Map<String, String> conMap = new HashMap<>();
+                            members.put(name, member);
+                            conMap.put("Name", name);
+                            conMap.put("Member", "グループID:" + obId);
+                            list.add(conMap);
+                        }
+
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                final SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
+                                lv.setAdapter(adapter);
+                                lv.setOnItemClickListener(onItem);
+                                lv.setOnItemLongClickListener(onItemLong);
+                            }
+                        });
+
+                    } catch (ParseException e1) {
+                        e1.printStackTrace();
+                    }
+                }
             }
         });
-        lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
-                AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                adb.setCancelable(true);
-                adb.setTitle("確認");
-                adb.setMessage("このグループを削除しますか？");
-                adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Wait("処理");
-                        Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
-                        String mem[] = members.get(map.get("Name")).split(",");
-                        ArrayList<String> arrayList = new ArrayList<String>();
 
-                        for (String str : mem) {
-                            if (!str.equals(myId))
-                                arrayList.add(str);
-                        }
 
-                        ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-                        query.whereEqualTo("GroupName", map.get("Name"));//そのクエリの中でReceiverがname変数のものを抜き出す。
 
-                        try {
-                            ParseObject testObject = query.find().get(0);
-                            String str = "";
-                            boolean a = true;
-                            for (String s : arrayList) {
-                                if (a) {
-                                    str = s + ",";
-                                    a = false;
-                                } else {
-                                    str = str + s + ",";
-                                }
+    }
+
+    private AdapterView.OnItemClickListener onItem = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
+
+            SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
+            editor.putString("groupId" , map.get("Member").substring(7));
+            editor.commit();
+
+            Wait("メンバー一覧読み込み");
+
+            Intent intent = new Intent();
+            intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
+            startActivity(intent);
+            finish();
+        }
+    };
+
+    private AdapterView.OnItemLongClickListener onItemLong = new AdapterView.OnItemLongClickListener(){
+
+        @Override
+        public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
+            AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+            adb.setCancelable(true);
+            adb.setTitle("確認");
+            adb.setMessage("このグループを削除しますか？");
+            adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Wait("処理");
+                    Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
+                    String mem[] = members.get(map.get("Name")).split(",");
+                    ArrayList<String> arrayList = new ArrayList<String>();
+
+                    for (String str : mem) {
+                        if (!str.equals(myId))
+                            arrayList.add(str);
+                    }
+
+                    ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
+                    query.whereEqualTo("GroupName", map.get("Name"));//そのクエリの中でReceiverがname変数のものを抜き出す。
+
+                    try {
+                        ParseObject testObject = query.find().get(0);
+                        String str = "";
+                        boolean a = true;
+                        for (String s : arrayList) {
+                            if (a) {
+                                str = s + ",";
+                                a = false;
+                            } else {
+                                str = str + s + ",";
                             }
-                            str = str.substring(0, str.length() - 1);
-                            testObject.put("Members", str);
-                            testObject.saveInBackground(new SaveCallback() {
-                                @Override
-                                public void done(ParseException e) {
-                                    listLoad();
-                                    waitDialog.dismiss();
-                                }
-                            });
-                        } catch (ParseException e) {
-
                         }
-
+                        str = str.substring(0, str.length() - 1);
+                        testObject.put("Members", str);
+                        testObject.saveInBackground(new SaveCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                listLoad();
+                                waitDialog.dismiss();
+                            }
+                        });
+                    } catch (ParseException e) {
 
                     }
-                });
-                adb.setNegativeButton("Cancel", null);
-                AlertDialog ad = adb.create();
-                ad.show();
-                return true;
-            }
-        });
-    }
+                }
+            });
+            adb.setNegativeButton("Cancel", null);
+            AlertDialog ad = adb.create();
+            ad.show();
+            return false;
+        }
+    };
 
     public void makeGroup(View v){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -300,7 +317,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                         }
 
                     } catch (ParseException e) {
-                        et1.setError("グループIDがありませんでした。IDを確認して下さい。");
+                        et1.setError("グループIDが見つかりませんでした。IDを確認して下さい。");
                     }
                 } else {
                     et1.setError("IDは10文字で入力してください");
