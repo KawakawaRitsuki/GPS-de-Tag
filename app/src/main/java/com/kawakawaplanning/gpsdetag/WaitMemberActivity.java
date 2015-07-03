@@ -137,7 +137,6 @@ public class WaitMemberActivity extends ActionBarActivity {
                         frag = false;
                 }
                 if (frag) {
-
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     startActivity(intent);
@@ -146,7 +145,7 @@ public class WaitMemberActivity extends ActionBarActivity {
                 }
             }
         };
-        timer.schedule(task, 1000, 1000);
+        timer.schedule(task, 500, 1000);
     }
 
     public boolean loginNow(String userName){
