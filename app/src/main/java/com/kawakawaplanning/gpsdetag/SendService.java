@@ -162,30 +162,33 @@ public class SendService extends Service implements LocationListener {
                         }
                         chatNum = parselist.size();
 
-                        Intent _intent = new Intent(SendService.this, MapsActivity.class);
-                        _intent.putExtra("name", myId);
-                        PendingIntent contentIntent = PendingIntent.getActivity(SendService.this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        if(MapsActivity.myId == null) {
+                            Intent _intent = new Intent(SendService.this, MapsActivity.class);
+                            _intent.putExtra("name", myId);
+                            _intent.putExtra("from", true);
+                            PendingIntent contentIntent = PendingIntent.getActivity(SendService.this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(SendService.this);
-                        builder.setContentIntent(contentIntent);
-                        builder.setTicker(from + "からチャットを受信しました！");
-                        builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
-                        builder.setContentTitle("チャットを受信しました");
-                        builder.setContentText(from + "からチャットを受信しました。タップで確認。");
-                        builder.setWhen(System.currentTimeMillis());
-                        long[] vib = {100,200,300};
-                        builder.setVibrate(vib);
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(SendService.this);
+                            builder.setContentIntent(contentIntent);
+                            builder.setTicker(from + "からチャットを受信しました！");
+                            builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
+                            builder.setContentTitle("チャットを受信しました");
+                            builder.setContentText(from + "からチャットを受信しました。タップで確認。");
+                            builder.setWhen(System.currentTimeMillis());
+                            long[] vib = {100, 200, 300};
+                            builder.setVibrate(vib);
 
-                        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle(builder);
-                        inboxStyle.setBigContentTitle("チャットを受信しました");
-                        inboxStyle.setSummaryText("GPS de 鬼ごっこ");
-                        inboxStyle.addLine(from + ":" + message);
+                            NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle(builder);
+                            inboxStyle.setBigContentTitle("チャットを受信しました");
+                            inboxStyle.setSummaryText("GPS de 鬼ごっこ");
+                            inboxStyle.addLine(from + ":" + message);
 
 
-                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        int nId = R.string.app_name + 1;
-                        nm.cancel(nId);
-                        nm.notify(nId, builder.build());
+                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            int nId = R.string.app_name + 1;
+                            nm.cancel(nId);
+                            nm.notify(nId, builder.build());
+                        }
                     }
                 }
             }

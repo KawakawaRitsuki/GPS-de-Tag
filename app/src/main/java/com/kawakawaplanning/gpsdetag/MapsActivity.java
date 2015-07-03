@@ -135,6 +135,10 @@ public class MapsActivity extends FragmentActivity {
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
+        if(getIntent().getBooleanExtra("from",false)){
+            chatBtn(null);
+        }
+
     }
 
     public void onClick(View v) {
@@ -167,6 +171,7 @@ public class MapsActivity extends FragmentActivity {
     public void chatBtn(View v){
         chatIv.setVisibility(View.VISIBLE);
         chatLl.setVisibility(View.VISIBLE);
+        chatTv.setText(SendService.chatTxt);
     }
 
 
@@ -178,6 +183,13 @@ public class MapsActivity extends FragmentActivity {
         timer.schedule(
                 new TimerTask() {
                     public void run() {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                chatTv.setText(SendService.chatTxt);
+                            }
+                        });
+
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -191,6 +203,7 @@ public class MapsActivity extends FragmentActivity {
         nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int nId = R.string.app_name;
         nm.cancel(nId);
+        nm.cancel(nId+1);
         myId = pref.getString("loginid", "");
     }
     public boolean isServiceRunning(Context c, Class<?> cls) {

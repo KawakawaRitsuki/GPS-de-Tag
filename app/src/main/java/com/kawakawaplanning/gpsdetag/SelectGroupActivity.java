@@ -276,7 +276,6 @@ public class SelectGroupActivity extends ActionBarActivity {
         alertDialogBuilder.setTitle("グループログイン");
         alertDialogBuilder.setView(view);
         alertDialogBuilder.setPositiveButton("OK", null);
-
         alertDialogBuilder.setCancelable(true);
         final AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
@@ -286,14 +285,10 @@ public class SelectGroupActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 final String str = et1.getEditableText().toString();
-
                 if (str.length() == 10) {
-
                     ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-
                     try {
                         ParseObject po = query.get(str);
-
                         String[] st = po.getString("Members").split(",");
                         String string = po.getString("Members");
 

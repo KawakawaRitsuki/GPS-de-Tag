@@ -137,6 +137,16 @@ public class WaitMemberActivity extends ActionBarActivity {
                         frag = false;
                 }
                 if (frag) {
+                    ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
+                    query.findInBackground(new FindCallback<ParseObject>() {
+                        @Override
+                        public void done(List<ParseObject> list, ParseException e) {
+                            for (ParseObject po:list){
+                                po.deleteInBackground();
+                            }
+                        }
+                    });
+
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     startActivity(intent);

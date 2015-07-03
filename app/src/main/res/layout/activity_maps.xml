@@ -42,14 +42,21 @@
             android:visibility="invisible"
             android:id="@+id/chatLL">
 
-            <TextView
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:id="@+id/chatTv"
-                android:textColor="#FFFFFF"
-                android:gravity="bottom"
-                android:textSize="24dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:id="@+id/scrollView2"
+                android:fillViewport="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/chatTv"
+                    android:textColor="#FFFFFF"
+                    android:gravity="bottom"
+                    android:textSize="24dp"/>
+            </ScrollView>
 
             <LinearLayout
                 android:orientation="horizontal"
@@ -60,7 +67,8 @@
                 <Spinner
                     android:layout_width="89dp"
                     android:layout_height="wrap_content"
-                    android:id="@+id/spinner" />
+                    android:id="@+id/spinner"
+                    android:background="#FFFFFF"/>
 
                 <EditText
                     android:layout_width="match_parent"
