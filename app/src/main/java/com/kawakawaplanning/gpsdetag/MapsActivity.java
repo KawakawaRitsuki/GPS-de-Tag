@@ -7,13 +7,13 @@ import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -129,33 +129,38 @@ public class MapsActivity extends FragmentActivity {
         googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
         mapInit();
 
-        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        int nId = R.string.app_name;
-
-        nm.cancel(nId);
 
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
-        receiveChat();
-
     }
 
     public void onClick(View v) {
-        finish = true;
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-        query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-        try {
-            ParseObject testObject = query.find().get(0);
-            testObject.put("LoginNow", "gB9xRLYJ3V4x");
-            testObject.saveInBackground();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        stopService(new Intent(MapsActivity.this, SendService.class));
-        ParseUser.logOutInBackground();
-        finish();
+        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+        adb.setTitle("確認");
+        adb.setMessage("本当にログアウトしますか？");
+        adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish = true;
+                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
+                query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
+                query.findInBackground(new FindCallback<ParseObject>() {
+                    @Override
+                    public void done(List<ParseObject> list, ParseException e) {
+                        ParseObject testObject = list.get(0);
+                        testObject.put("LoginNow", "gB9xRLYJ3V4x");
+                        testObject.saveInBackground();
+                    }
+                });
+                stopService(new Intent(MapsActivity.this, SendService.class));
+                ParseUser.logOutInBackground();
+                finish();
+            }
+        });
+        adb.setNegativeButton("Cancel",null);
+        adb.show();
     }
 
     public void chatBtn(View v){
@@ -169,8 +174,6 @@ public class MapsActivity extends FragmentActivity {
         temp = "";
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
-//        query.whereEqualTo("Receiver", name);
-//        query.whereEqualTo("Receiver", name);
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
                 if (e == null) {//エラーが無ければ
@@ -178,7 +181,7 @@ public class MapsActivity extends FragmentActivity {
                         String message = parseObject.getString("Message");
                         String from = parseObject.getString("From");
                         String to = parseObject.getString("To");
-                        if(to.equals(myId) || to.equals("All") || from.equals(myId))
+                        if (to.equals(myId) || to.equals("All") || from.equals(myId))
                             temp = temp + from + ":" + message + "\n";
                     }
                     chatTv.setText(temp);
@@ -198,12 +201,16 @@ public class MapsActivity extends FragmentActivity {
                             @Override
                             public void run() {
                                 getLocate(mem);
+                                receiveChat();
                             }
                         }).start();
 
                     }
                 }, 5000, 5000);
-
+        
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        int nId = R.string.app_name;
+        nm.cancel(nId);
     }
     public boolean isServiceRunning(Context c, Class<?> cls) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
@@ -227,9 +234,7 @@ public class MapsActivity extends FragmentActivity {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
         i = 0;
         for(final String id:name) {
-//            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
-
-                Log.v("tag",id);
+            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
                 try {
                     ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);//そのクエリの中でReceiverがname変数のものを抜き出す。
                     ParseObject po = q.find().get(0);
@@ -263,7 +268,7 @@ public class MapsActivity extends FragmentActivity {
                     e.printStackTrace();
                 }
             i++;
-//            }
+            }
         }
     }
 
