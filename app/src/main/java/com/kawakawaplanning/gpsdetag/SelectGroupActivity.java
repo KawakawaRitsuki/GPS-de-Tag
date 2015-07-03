@@ -126,7 +126,7 @@ public class SelectGroupActivity extends ActionBarActivity {
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
             startActivity(intent);
-
+            finish();
         }
     };
 

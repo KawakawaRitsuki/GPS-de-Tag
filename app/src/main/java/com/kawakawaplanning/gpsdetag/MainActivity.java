@@ -77,10 +77,16 @@ public class MainActivity extends ActionBarActivity {
                         Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
                         startActivity(intent);
-                    } else if (e.getCode() == 100) {
-                        alert("接続エラー", "サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                        finish();
                     } else {
-                        alert("エラー", "エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                        switch (e.getCode()){
+                            case 100:
+                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                                break;
+                            default:
+                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                                break;
+                        }
                     }
                 }
             });
@@ -104,6 +110,7 @@ public class MainActivity extends ActionBarActivity {
                         Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
                         startActivity(intent);
+                        finish();
 
                         if (mCheckBox.isChecked()) {
                             editor = pref.edit();
@@ -182,7 +189,6 @@ public class MainActivity extends ActionBarActivity {
         adb.setTitle(til);
         adb.setMessage(msg);
         adb.setPositiveButton("OK", null);
-        adb.show();
         ad = adb.create();
         ad.show();
     }
