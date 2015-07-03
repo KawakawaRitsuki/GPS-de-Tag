@@ -60,6 +60,7 @@ public class MapsActivity extends FragmentActivity {
     TextView chatTv;
     EditText chatEt;
     Spinner spinner;
+    SharedPreferences pref;
 
     int i ;
 
@@ -106,7 +107,7 @@ public class MapsActivity extends FragmentActivity {
 
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
-        SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
         mem = pref.getString("mem","").split(",");
         groupId = pref.getString("groupId", "");
@@ -159,7 +160,7 @@ public class MapsActivity extends FragmentActivity {
                 finish();
             }
         });
-        adb.setNegativeButton("Cancel",null);
+        adb.setNegativeButton("Cancel", null);
         adb.show();
     }
 
@@ -168,27 +169,7 @@ public class MapsActivity extends FragmentActivity {
         chatLl.setVisibility(View.VISIBLE);
     }
 
-    String temp;
 
-    public void receiveChat(){
-        temp = "";
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
-        query.findInBackground(new FindCallback<ParseObject>() {
-            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                if (e == null) {//エラーが無ければ
-                    for (ParseObject parseObject : parselist) {
-                        String message = parseObject.getString("Message");
-                        String from = parseObject.getString("From");
-                        String to = parseObject.getString("To");
-                        if (to.equals(myId) || to.equals("All") || from.equals(myId))
-                            temp = temp + from + ":" + message + "\n";
-                    }
-                    chatTv.setText(temp);
-                }
-            }
-        });
-    }
 
     @Override
     protected void onResume() {
@@ -201,16 +182,16 @@ public class MapsActivity extends FragmentActivity {
                             @Override
                             public void run() {
                                 getLocate(mem);
-                                receiveChat();
                             }
                         }).start();
 
                     }
                 }, 5000, 5000);
-        
+
         nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int nId = R.string.app_name;
         nm.cancel(nId);
+        myId = pref.getString("loginid", "");
     }
     public boolean isServiceRunning(Context c, Class<?> cls) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
@@ -299,6 +280,7 @@ public class MapsActivity extends FragmentActivity {
         super.onStop();
         timer.cancel();
         notificate();
+        myId = null;
     }
 
     public void notificate(){
