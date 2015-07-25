@@ -72,7 +72,6 @@ public class WaitMemberActivity extends ActionBarActivity {
         mHandler = new Handler();
 
         setContentView(R.layout.activity_member_wait);
-
         findView();
 
         for(int i = 0; i != mem.length;i++){
