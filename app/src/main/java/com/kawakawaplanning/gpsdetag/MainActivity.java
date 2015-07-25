@@ -107,6 +107,7 @@ public class MainActivity extends ActionBarActivity {
 
                         editor = pref.edit();
                         editor.putString("loginid", mIdEt.getText().toString());
+                        editor.commit();
                         Intent intent = new Intent();
                         intent.setClass(MainActivity.this, SelectGroupActivity.class);
                         startActivity(intent);

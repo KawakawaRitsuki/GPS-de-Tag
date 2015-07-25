@@ -292,7 +292,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                         String[] st = po.getString("Members").split(",");
                         String string = po.getString("Members");
 
-                        if(st.length > 5) {
+                        if(st.length < 5) {
                             boolean f = true;
                             for (String s : st) {
                                 if (s.equals(myId))
