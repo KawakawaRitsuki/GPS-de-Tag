@@ -30,7 +30,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -50,8 +49,8 @@ public class MapsActivity extends FragmentActivity {
     static public GoogleMap googleMap;
     static public String myId;
     private String groupId;
-    private Handler handler; //ThreadUI操作用
-    private Map<Integer, Marker> marker= new HashMap<Integer, Marker>();
+    private Handler handler;
+    private Map<Integer, Marker> marker= new HashMap<>();
     static public String[] mem;
     Timer timer;
     private NotificationManager nm;
@@ -76,33 +75,27 @@ public class MapsActivity extends FragmentActivity {
         chatEt = (EditText)findViewById(R.id.chatEt);
         chatTv = (TextView)findViewById(R.id.chatTv);
 
-        chatEt.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (event.getAction() == KeyEvent.ACTION_DOWN
-                        && keyCode == KeyEvent.KEYCODE_ENTER) {
-                    try {
-                        ParseObject groupObject = new ParseObject(groupId);
-                        groupObject.put("Message", chatEt.getEditableText().toString());
-                        groupObject.put("From", myId);
-                        groupObject.put("To", spinner.getSelectedItem().toString());
-                        groupObject.save();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    chatEt.setText(null);
-                    return true;
+        chatEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN
+                    && keyCode == KeyEvent.KEYCODE_ENTER) {
+                try {
+                    ParseObject groupObject = new ParseObject(groupId);
+                    groupObject.put("Message", chatEt.getEditableText().toString());
+                    groupObject.put("From", myId);
+                    groupObject.put("To", spinner.getSelectedItem().toString());
+                    groupObject.save();
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-                return false;
+                chatEt.setText(null);
+                return true;
             }
+            return false;
         });
 
-        chatIv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                chatIv.setVisibility(View.INVISIBLE);
-                chatLl.setVisibility(View.INVISIBLE);
-            }
+        chatIv.setOnClickListener((View v) -> {
+            chatIv.setVisibility(View.INVISIBLE);
+            chatLl.setVisibility(View.INVISIBLE);
         });
 
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
@@ -114,10 +107,9 @@ public class MapsActivity extends FragmentActivity {
 
         spinner = (Spinner)findViewById(R.id.spinner);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         adapter.add("All");
-        // アイテムを追加します
         for (String str:mem){
             if(!str.equals(myId))
                 adapter.add(str);
@@ -145,24 +137,18 @@ public class MapsActivity extends FragmentActivity {
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setTitle("確認");
         adb.setMessage("本当にログアウトしますか？");
-        adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                finish = true;
-                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-                query.findInBackground(new FindCallback<ParseObject>() {
-                    @Override
-                    public void done(List<ParseObject> list, ParseException e) {
-                        ParseObject testObject = list.get(0);
-                        testObject.put("LoginNow", "gB9xRLYJ3V4x");
-                        testObject.saveInBackground();
-                    }
-                });
-                stopService(new Intent(MapsActivity.this, SendService.class));
-                ParseUser.logOutInBackground();
-                finish();
-            }
+        adb.setPositiveButton("OK",(DialogInterface dialog, int which) -> {
+            finish = true;
+            ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
+            query.whereEqualTo("USERID", myId);
+            query.findInBackground((List<ParseObject> list, ParseException e) -> {
+                ParseObject testObject = list.get(0);
+                testObject.put("LoginNow", "gB9xRLYJ3V4x");
+                testObject.saveInBackground();
+            });
+            stopService(new Intent(MapsActivity.this, SendService.class));
+            ParseUser.logOutInBackground();
+            finish();
         });
         adb.setNegativeButton("Cancel", null);
         adb.show();
@@ -183,20 +169,9 @@ public class MapsActivity extends FragmentActivity {
         timer.schedule(
                 new TimerTask() {
                     public void run() {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                chatTv.setText(SendService.chatTxt);
-                            }
-                        });
+                        handler.post(() -> chatTv.setText(SendService.chatTxt));
 
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                getLocate(mem);
-                            }
-                        }).start();
-
+                        new Thread(() -> getLocate(mem)).start();
                     }
                 }, 5000, 5000);
 
@@ -225,37 +200,34 @@ public class MapsActivity extends FragmentActivity {
 
     public void getLocate(final String name[]){
 
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
         i = 0;
         for(final String id:name) {
-            if(!id.equals(myId)) {//リリース時ここのコメントアウトを外す
+            if(!id.equals(myId)) {
                 try {
-                    ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);//そのクエリの中でReceiverがname変数のものを抜き出す。
+                    ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);
                     ParseObject po = q.find().get(0);
                     final String obId = po.getObjectId();
-                    final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
+                    final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");
                     if(que.get(obId).getString("LoginNow").equals(groupId)) {
                         try {
-                            setMarker(i, que.get(obId).getString("username"),que.get(obId).getDouble("Latitude"), que.get(obId).getDouble("Longiutude"));
+                            setMarker(i, que.get(obId).getString("UserName"),que.get(obId).getDouble("Latitude"), que.get(obId).getDouble("Longiutude"));
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     }else{
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                marker.get(i).remove();
-                                AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-                                adb.setCancelable(true);
-                                adb.setTitle("通知");
-                                adb.setMessage(id + "さんが退出しました");
-                                adb.setPositiveButton("OK", null);
-                                AlertDialog ad = adb.create();
-                                ad.show();
-                                List<String> list = new ArrayList<String>(Arrays.asList(mem)); // 新インスタンスを生成
-                                list.remove(id);
-                                mem = (String[]) list.toArray(new String[list.size()]);
-                            }
+                        handler.post(()->{
+                            marker.get(i).remove();
+                            AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+                            adb.setCancelable(true);
+                            adb.setTitle("通知");
+                            adb.setMessage(id + "さんが退出しました");
+                            adb.setPositiveButton("OK", null);
+                            AlertDialog ad = adb.create();
+                            ad.show();
+                            List<String> list = new ArrayList<>(Arrays.asList(mem)); // 新インスタンスを生成
+                            list.remove(id);
+                            mem = list.toArray(new String[list.size()]);
                         });
                     }
                 } catch (ParseException e) {
@@ -267,22 +239,16 @@ public class MapsActivity extends FragmentActivity {
     }
 
     public void setMarker(final int id,final String name,final double lat,final double lon){
-        handler.post(
-                new Runnable() {
-                    @Override
-                    public void run() {
-
-                        if (marker.get(id) == null) {
-                            LatLng latLng = new LatLng(lat, lon);
-                            MarkerOptions markerOptions = new MarkerOptions();
-                            markerOptions.position(latLng);
-                            markerOptions.title(name);
-                            marker.put(id, googleMap.addMarker(markerOptions));
-                        }else{
-                            LatLng latLng = new LatLng(lat, lon);
-                            marker.get(id).setPosition(latLng);
-                        }
-
+        handler.post(() -> {
+                    if (marker.get(id) == null) {
+                        LatLng latLng = new LatLng(lat, lon);
+                        MarkerOptions markerOptions = new MarkerOptions();
+                        markerOptions.position(latLng);
+                        markerOptions.title(name);
+                        marker.put(id, googleMap.addMarker(markerOptions));
+                    }else{
+                        LatLng latLng = new LatLng(lat, lon);
+                        marker.get(id).setPosition(latLng);
                     }
                 }
         );

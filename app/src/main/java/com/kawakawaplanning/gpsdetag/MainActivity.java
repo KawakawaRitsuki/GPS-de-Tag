@@ -1,6 +1,5 @@
 package com.kawakawaplanning.gpsdetag;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -17,7 +16,6 @@ import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseUser;
-import com.parse.SignUpCallback;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -56,7 +54,7 @@ public class MainActivity extends ActionBarActivity {
                 break;
 
             case R.id.signinbutton:
-                signup();
+                signUp();
                 break;
         }
     }
@@ -70,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
                     if (e == null) {
                         editor = pref.edit();
                         editor.putString("loginid", pref.getString("username", ""));
-                        editor.commit();
+                        editor.apply();
 
                         waitDialog.dismiss();
 
@@ -100,49 +98,48 @@ public class MainActivity extends ActionBarActivity {
         if (putId == null){
             alert("入力エラー","IDが入力されていません。入力してください。");
         }else{
-            ParseUser.logInInBackground(mIdEt.getText().toString(), mPwEt.getText().toString(), new LogInCallback() {
-                public void done(ParseUser user, ParseException e) {
-                    waitDialog.dismiss();
-                    if (user != null) {
+            ParseUser.logInInBackground(mIdEt.getText().toString(), mPwEt.getText().toString(),
+                    (ParseUser user, ParseException e) -> {
 
-                        editor = pref.edit();
-                        editor.putString("loginid", mIdEt.getText().toString());
-                        editor.commit();
-                        Intent intent = new Intent();
-                        intent.setClass(MainActivity.this, SelectGroupActivity.class);
-                        startActivity(intent);
-                        finish();
-
-                        if (mCheckBox.isChecked()) {
+                        waitDialog.dismiss();
+                        if (user != null) {
                             editor = pref.edit();
-                            editor.putString("username", mIdEt.getText().toString());
-                            editor.putString("password", mPwEt.getText().toString());
-                            editor.putBoolean("AutoLogin", true);
-                            editor.commit();
-                        }
+                            editor.putString("loginid", mIdEt.getText().toString());
+                            editor.apply();
+                            Intent intent = new Intent();
+                            intent.setClass(MainActivity.this, SelectGroupActivity.class);
+                            startActivity(intent);
+                            finish();
 
-                        finish();
+                            if (mCheckBox.isChecked()) {
+                                editor = pref.edit();
+                                editor.putString("username", mIdEt.getText().toString());
+                                editor.putString("password", mPwEt.getText().toString());
+                                editor.putBoolean("AutoLogin", true);
+                                editor.apply();
+                            }
 
-                    } else {
-                        switch (e.getCode()){
-                            case 101:
-                                alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:101");
-                                break;
-                            case 100:
-                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                                break;
-                            default:
-                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-                                break;
+                            finish();
+
+                        } else {
+                            switch (e.getCode()){
+                                case 101:
+                                    alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:101");
+                                    break;
+                                case 100:
+                                    alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                                    break;
+                                default:
+                                    alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                                    break;
+                            }
                         }
-                    }
-                }
 
             });
         }
     }
 
-    public void signup(){
+    public void signUp(){
 
         if( mIdEt.getText().toString().length() <= 3 && mPwEt.getText().toString().length() <= 5){
             alert("入力エラー","IDは4文字以上・PWは6文字以上にしてください。");
@@ -153,25 +150,23 @@ public class MainActivity extends ActionBarActivity {
             user.setUsername(mIdEt.getText().toString());
             user.setPassword(mPwEt.getText().toString());
 
-            user.signUpInBackground(new SignUpCallback() {
-                public void done(ParseException e) {
+            user.signUpInBackground((ParseException e) -> {
 
-                    waitDialog.dismiss();
+                waitDialog.dismiss();
 
-                    if (e == null) {
-                        alert("登録完了","会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
-                    } else {
-                        switch (e.getCode()){
-                            case 202:
-                                alert("登録エラー","このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
-                                break;
-                            case 100:
-                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                                break;
-                            default:
-                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-                                break;
-                        }
+                if (e == null) {
+                    alert("登録完了","会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
+                } else {
+                    switch (e.getCode()){
+                        case 202:
+                            alert("登録エラー","このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
+                            break;
+                        case 100:
+                            alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                            break;
+                        default:
+                            alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                            break;
                     }
                 }
             });

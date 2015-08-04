@@ -93,15 +93,12 @@ public class SelectGroupActivity extends ActionBarActivity {
                             list.add(conMap);
                         }
 
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                final SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
-                                lv.setAdapter(adapter);
-                                lv.setOnItemClickListener(onItem);
-                                lv.setOnItemLongClickListener(onItemLong);
-                                waitDialog.dismiss();
-                            }
+                        mHandler.post(() -> {
+                            final SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
+                            lv.setAdapter(adapter);
+                            lv.setOnItemClickListener(onItem);
+                            lv.setOnItemLongClickListener(onItemLong);
+                            waitDialog.dismiss();
                         });
 
                     } catch (ParseException e1) {
@@ -121,7 +118,7 @@ public class SelectGroupActivity extends ActionBarActivity {
             SharedPreferences.Editor editor = pref.edit();
             editor.putString("mem", members.get(map.get("Name")));//グループ名からメンバーを抜き出す
             editor.putString("groupId", map.get("Member").substring(7));
-            editor.commit();
+            editor.apply();
 
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
@@ -176,7 +173,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                             }
                         });
                     } catch (ParseException e) {
-
+                        e.printStackTrace();
                     }
                 }
             });
@@ -201,61 +198,48 @@ public class SelectGroupActivity extends ActionBarActivity {
 
         alertDialogBuilder.setTitle("グループ作成");
         alertDialogBuilder.setView(view);
-        alertDialogBuilder.setPositiveButton("OK",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        final String str = et1.getEditableText().toString();
-                        if (str.equals("gB9xRLYJ3V4x")) {
-                            AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                            adb.setCancelable(true);
-                            adb.setTitle("グループ作成失敗");
-                            adb.setMessage("システムエラーが発生しました。グループ名を変えてもう一度作成してください。");
-                            adb.setPositiveButton("OK", null);
-                            AlertDialog ad = adb.create();
-                            ad.show();
-                        } else if (!str.isEmpty()) {
+        alertDialogBuilder.setPositiveButton("OK",(DialogInterface dialog, int which) -> {
+            final String str = et1.getEditableText().toString();
+            if (str.equals("gB9xRLYJ3V4x")) {
+                AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                adb.setCancelable(true);
+                adb.setTitle("グループ作成失敗");
+                adb.setMessage("システムエラーが発生しました。グループ名を変えてもう一度作成してください。");
+                adb.setPositiveButton("OK", null);
+                AlertDialog ad = adb.create();
+                ad.show();
+            } else if (!str.isEmpty()) {
+                ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
+                query.whereEqualTo("GroupName", str);//そのクエリの中でReceiverがname変数のものを抜き出す。
+                try {
+                    if (query.count() == 0) {
+                        ParseObject groupObject = new ParseObject("Group");
+                        groupObject.put("GroupName", str);
+                        groupObject.put("Members", myId);
+                        groupObject.save();
 
-                            ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-                            query.whereEqualTo("GroupName", str);//そのクエリの中でReceiverがname変数のものを抜き出す。
-
-                            try {
-                                if (query.count() == 0) {
-                                    ParseObject groupObject = new ParseObject("Group");
-                                    groupObject.put("GroupName", str);
-                                    groupObject.put("Members", myId);
-                                    groupObject.save();
-
-                                    AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                                    adb.setCancelable(true);
-                                    adb.setTitle("グループ作成完了");
-                                    adb.setMessage("グループの作成が完了しました。友達を早速誘おう！グループIDは「" + groupObject.getObjectId() + "」です。");
-                                    adb.setPositiveButton("OK", null);
-                                    AlertDialog ad = adb.create();
-                                    ad.show();
-                                    listLoad();
-                                } else {
-                                    AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                                    adb.setCancelable(true);
-                                    adb.setTitle("グループ作成失敗");
-                                    adb.setMessage("グループの作成に失敗しました。すでに同じグループ名が存在しています。グループ名を変えてもう一度作成してください。");
-                                    adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            listLoad();
-                                        }
-                                    });
-                                    AlertDialog ad = adb.create();
-                                    ad.show();
-                                }
-
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
+                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                        adb.setCancelable(true);
+                        adb.setTitle("グループ作成完了");
+                        adb.setMessage("グループの作成が完了しました。友達を早速誘おう！グループIDは「" + groupObject.getObjectId() + "」です。");
+                        adb.setPositiveButton("OK", null);
+                        AlertDialog ad = adb.create();
+                        ad.show();
+                        listLoad();
+                    } else {
+                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                        adb.setCancelable(true);
+                        adb.setTitle("グループ作成失敗");
+                        adb.setMessage("グループの作成に失敗しました。すでに同じグループ名が存在しています。グループ名を変えてもう一度作成してください。");
+                        adb.setPositiveButton("OK", (DialogInterface d, int w) -> listLoad());
+                        AlertDialog ad = adb.create();
+                        ad.show();
                     }
-                });
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         alertDialogBuilder.setCancelable(true);
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
@@ -281,44 +265,42 @@ public class SelectGroupActivity extends ActionBarActivity {
         alertDialog.show();
 
         Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        buttonOK.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String str = et1.getEditableText().toString();
-                if (str.length() == 10) {
-                    ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
-                    try {
-                        ParseObject po = query.get(str);
-                        String[] st = po.getString("Members").split(",");
-                        String string = po.getString("Members");
+        buttonOK.setOnClickListener((View v1) -> {
+            final String str = et1.getEditableText().toString();
+            if (str.length() == 10) {
+                ParseQuery<ParseObject> query = ParseQuery.getQuery("Group");//ParseObject型のParseQueryを取得する。
+                try {
+                    ParseObject po = query.get(str);
+                    String[] st = po.getString("Members").split(",");
+                    String string = po.getString("Members");
 
-                        if(st.length < 5) {
-                            boolean f = true;
-                            for (String s : st) {
-                                if (s.equals(myId))
-                                    f = false;
-                            }
-
-                            if (f) {
-                                string = string + "," + myId;
-                                po.put("Members", string);
-                                po.saveInBackground();
-                                alertDialog.dismiss();
-                                listLoad();
-                            } else {
-                                et1.setError("すでにログインしています");
-                            }
-                        }else{
-                            et1.setError("一つのグループには5人までしかログインできません。");
+                    if(st.length < 5) {
+                        boolean f = true;
+                        for (String s : st) {
+                            if (s.equals(myId))
+                                f = false;
                         }
 
-                    } catch (ParseException e) {
-                        et1.setError("グループIDが見つかりませんでした。IDを確認して下さい。");
+                        if (f) {
+                            string = string + "," + myId;
+                            po.put("Members", string);
+                            po.saveInBackground();
+                            alertDialog.dismiss();
+                            listLoad();
+                        } else {
+                            et1.setError("すでにログインしています");
+                        }
+                    }else{
+                        et1.setError("一つのグループには5人までしかログインできません。");
                     }
-                } else {
-                    et1.setError("IDは10文字で入力してください");
+
+                } catch (ParseException e) {
+                    et1.setError("グループIDが見つかりませんでした。IDを確認して下さい。");
                 }
+            } else {
+                et1.setError("IDは10文字で入力してください");
             }
+
         });
     }
     private void Wait(String what){

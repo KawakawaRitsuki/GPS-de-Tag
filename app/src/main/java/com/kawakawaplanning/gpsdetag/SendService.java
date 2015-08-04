@@ -62,12 +62,9 @@ public class SendService extends Service implements LocationListener {
             @Override
             public void run() {
 
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendLocate(lat, lon);
-                        receiveChat();
-                    }
+                handler.post(() -> {
+                    sendLocate(lat, lon);
+                    receiveChat();
                 });
             }
         }, 0, 5000);
@@ -105,28 +102,24 @@ public class SendService extends Service implements LocationListener {
     public void sendLocate(final double lat ,final double lon){
 
         if (lat != 0.0) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
-                    query.whereEqualTo("USERID", myId);
-
-                    try {
-                        if (query.find().size() != 0) {
-                            ParseObject testObject = query.find().get(0);
-                            testObject.put("Latitude", lat);
-                            testObject.put("Longiutude", lon);
-                            testObject.saveInBackground();
-                        } else {
-                            ParseObject testObject = new ParseObject("TestObject");
-                            testObject.put("USERID", myId);
-                            testObject.put("Latitude", lat);
-                            testObject.put("Longiutude", lon);
-                            testObject.saveInBackground();
-                        }
-                    } catch (ParseException e) {
-
+            new Thread(() -> {
+                ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
+                query.whereEqualTo("USERID", myId);
+                try {
+                    if (query.find().size() != 0) {
+                        ParseObject testObject = query.find().get(0);
+                        testObject.put("Latitude", lat);
+                        testObject.put("Longiutude", lon);
+                        testObject.saveInBackground();
+                    } else {
+                        ParseObject testObject = new ParseObject("TestObject");
+                        testObject.put("USERID", myId);
+                        testObject.put("Latitude", lat);
+                        testObject.put("Longiutude", lon);
+                        testObject.saveInBackground();
                     }
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             }).start();
         }
@@ -135,60 +128,56 @@ public class SendService extends Service implements LocationListener {
     public static String chatTxt;
     public void receiveChat(){
         ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
-        query.findInBackground(new FindCallback<ParseObject>() {
-            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                if (e == null) {//エラーが無ければ
-                    if (chatNum == 0) {
-                        chatTxt = "";
-                        for (ParseObject parseObject : parselist) {
-                            String message = parseObject.getString("Message");
-                            String from = parseObject.getString("From");
-                            String to = parseObject.getString("To");
-                            if (to.equals(myId) || to.equals("All") || from.equals(myId))
-                                chatTxt = chatTxt + from + ":" + message + "\n";
-                        }
-                        chatNum = parselist.size();
-                    } else if(parselist.size() > chatNum){
-                        chatTxt = "";
-                        String message = "";
-                        String from = "";
-                        String to;
-                        for (ParseObject parseObject : parselist) {
-                            message = parseObject.getString("Message");
-                            from = parseObject.getString("From");
-                            to = parseObject.getString("To");
-                            if (to.equals(myId) || to.equals("All") || from.equals(myId))
-                                chatTxt = chatTxt + from + ":" + message + "\n";
-                        }
-                        chatNum = parselist.size();
+        query.findInBackground((List<ParseObject> parselist, com.parse.ParseException e) -> {
+            if (e == null) {//エラーが無ければ
+                if (chatNum == 0) {
+                    chatTxt = "";
+                    for (ParseObject parseObject : parselist) {
+                        String message = parseObject.getString("Message");
+                        String from = parseObject.getString("From");
+                        String to = parseObject.getString("To");
+                        if (to.equals(myId) || to.equals("All") || from.equals(myId))
+                            chatTxt = chatTxt + from + ":" + message + "\n";
+                    }
+                    chatNum = parselist.size();
+                } else if(parselist.size() > chatNum){
+                    chatTxt = "";
+                    String message = "";
+                    String from = "";
+                    String to;
+                    for (ParseObject parseObject : parselist) {
+                        message = parseObject.getString("Message");
+                        from = parseObject.getString("From");
+                        to = parseObject.getString("To");
+                        if (to.equals(myId) || to.equals("All") || from.equals(myId))
+                            chatTxt = chatTxt + from + ":" + message + "\n";
+                    }
+                    chatNum = parselist.size();
 
-                        if(MapsActivity.myId == null) {
-                            Intent _intent = new Intent(SendService.this, MapsActivity.class);
-                            _intent.putExtra("name", myId);
-                            _intent.putExtra("from", true);
-                            PendingIntent contentIntent = PendingIntent.getActivity(SendService.this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    if(MapsActivity.myId == null) {
+                        Intent _intent = new Intent(SendService.this, MapsActivity.class);
+                        _intent.putExtra("name", myId);
+                        _intent.putExtra("from", true);
+                        PendingIntent contentIntent = PendingIntent.getActivity(SendService.this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(SendService.this);
+                        builder.setContentIntent(contentIntent);
+                        builder.setTicker(from + "からチャットを受信しました！");
+                        builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
+                        builder.setContentTitle("チャットを受信しました");
+                        builder.setContentText(from + "からチャットを受信しました。タップで確認。");
+                        builder.setWhen(System.currentTimeMillis());
+                        long[] vib = {100, 200, 300};
+                        builder.setVibrate(vib);
 
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(SendService.this);
-                            builder.setContentIntent(contentIntent);
-                            builder.setTicker(from + "からチャットを受信しました！");
-                            builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
-                            builder.setContentTitle("チャットを受信しました");
-                            builder.setContentText(from + "からチャットを受信しました。タップで確認。");
-                            builder.setWhen(System.currentTimeMillis());
-                            long[] vib = {100, 200, 300};
-                            builder.setVibrate(vib);
+                        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle(builder);
+                        inboxStyle.setBigContentTitle("チャットを受信しました");
+                        inboxStyle.setSummaryText("GPS de 鬼ごっこ");
+                        inboxStyle.addLine(from + ":" + message);
 
-                            NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle(builder);
-                            inboxStyle.setBigContentTitle("チャットを受信しました");
-                            inboxStyle.setSummaryText("GPS de 鬼ごっこ");
-                            inboxStyle.addLine(from + ":" + message);
-
-
-                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                            int nId = R.string.app_name + 1;
-                            nm.cancel(nId);
-                            nm.notify(nId, builder.build());
-                        }
+                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        int nId = R.string.app_name + 1;
+                        nm.cancel(nId);
+                        nm.notify(nId, builder.build());
                     }
                 }
             }
