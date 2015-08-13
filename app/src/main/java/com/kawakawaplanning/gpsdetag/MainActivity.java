@@ -3,19 +3,31 @@ package com.kawakawaplanning.gpsdetag;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
+
+import java.io.IOException;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -34,6 +46,9 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+
+        gcm = GoogleCloudMessaging.getInstance(this);
+        registerInBackground();
 
         findView();
         autoLogin();
@@ -154,18 +169,55 @@ public class MainActivity extends ActionBarActivity {
 
                 waitDialog.dismiss();
 
+
                 if (e == null) {
-                    alert("登録完了","会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
+
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    LayoutInflater inflater = (LayoutInflater) this.getSystemService(
+                            LAYOUT_INFLATER_SERVICE);
+                    View view = inflater.inflate(R.layout.dialog_et1,
+                            (ViewGroup) findViewById(R.id.dialog_layout));
+
+                    final EditText et1 = (EditText) view.findViewById(R.id.editText1);
+                    final TextView tv1 = (TextView) view.findViewById(R.id.dig_tv1);
+
+                    tv1.setText("ニックネームを設定します。設定したいニックネームを入力してください！");
+
+                    alertDialogBuilder.setTitle("ニックネーム設定");
+                    alertDialogBuilder.setView(view);
+                    alertDialogBuilder.setPositiveButton("OK", null);
+                    alertDialogBuilder.setCancelable(false);
+                    final AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialog.show();
+
+                    Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                    buttonOK.setOnClickListener((View v1) -> {
+                        final String str = et1.getEditableText().toString();
+                        if (str.length() != 0) {
+                            ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
+                            query.whereEqualTo("USERID", mIdEt.getText().toString());
+                            try {
+                                ParseObject po = query.getFirst();
+
+                            } catch (ParseException er) {
+                                et1.setError("グループIDが見つかりませんでした。IDを確認して下さい。");
+                            }
+                        } else {
+                            et1.setError("IDを入力してください");
+                        }
+
+                    });
+                    alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
                 } else {
-                    switch (e.getCode()){
+                    switch (e.getCode()) {
                         case 202:
-                            alert("登録エラー","このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
+                            alert("登録エラー", "このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
                             break;
                         case 100:
-                            alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
+                            alert("接続エラー", "サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
                             break;
                         default:
-                            alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
+                            alert("エラー", "エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
                             break;
                     }
                 }
@@ -187,5 +239,30 @@ public class MainActivity extends ActionBarActivity {
         adb.setPositiveButton("OK", null);
         ad = adb.create();
         ad.show();
+    }
+
+    private GoogleCloudMessaging gcm;
+    private void registerInBackground() {
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                String msg = "";
+                try {
+                    if (gcm == null) {
+                        gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
+                    }
+                    String regid = gcm.register("386036556837");
+                    msg = "Device registered, registration ID=" + regid;
+                } catch (IOException ex) {
+                    msg = "Error :" + ex.getMessage();
+                }
+                return msg;
+            }
+
+            @Override
+            protected void onPostExecute(String msg) {
+                Log.v("kp",msg);
+            }
+        }.execute(null, null, null);
     }
 }
