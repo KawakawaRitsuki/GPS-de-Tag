@@ -20,12 +20,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.parse.LogInCallback;
+import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 import com.parse.Parse;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseUser;
 
 import java.io.IOException;
 
@@ -78,79 +74,63 @@ public class MainActivity extends ActionBarActivity {
         if(pref.getBoolean("AutoLogin", false)){
             Wait("自動ログイン");
 
-            ParseUser.logInInBackground(pref.getString("username", ""), pref.getString("password", ""), new LogInCallback() {
-                public void done(ParseUser user, ParseException e) {
-                    if (e == null) {
-                        editor = pref.edit();
-                        editor.putString("loginid", pref.getString("username", ""));
-                        editor.apply();
-
-                        waitDialog.dismiss();
-
-                        Intent intent = new Intent();
-                        intent.setClass(MainActivity.this, SelectGroupActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        switch (e.getCode()){
-                            case 100:
-                                alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                                break;
-                            default:
-                                alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-                                break;
-                        }
-                    }
+            HttpConnector httpConnector = new HttpConnector("http://192.168.43.8:8080/login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            httpConnector.setOnHttpResponseListener((String message) -> {
+                Log.v("tag", message);
+                waitDialog.dismiss();
+                if (Integer.parseInt(message) == 0) {
+                    editor = pref.edit();
+                    editor.putString("loginid", mIdEt.getText().toString());
+                    editor.apply();
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this, SelectGroupActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    alert("ログインエラー", "IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
                 }
+
             });
+            httpConnector.post();
 
         }
     }
 
     public void login(){
-        Wait("ログイン");
+
         String putId = mIdEt.getText().toString();
         if (putId == null){
             alert("入力エラー","IDが入力されていません。入力してください。");
         }else{
-            ParseUser.logInInBackground(mIdEt.getText().toString(), mPwEt.getText().toString(),
-                    (ParseUser user, ParseException e) -> {
+            Wait("ログイン");
 
-                        waitDialog.dismiss();
-                        if (user != null) {
-                            editor = pref.edit();
-                            editor.putString("loginid", mIdEt.getText().toString());
-                            editor.apply();
-                            Intent intent = new Intent();
-                            intent.setClass(MainActivity.this, SelectGroupActivity.class);
-                            startActivity(intent);
-                            finish();
+            HttpConnector httpConnector = new HttpConnector("http://192.168.11.2:8080/login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            httpConnector.setOnHttpResponseListener((String message) -> {
+                Log.v("tag", message);
+                waitDialog.dismiss();
+                if(Integer.parseInt(message) == 0){
+                    editor = pref.edit();
+                    editor.putString("loginid", mIdEt.getText().toString());
+                    editor.apply();
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this, SelectGroupActivity.class);
+                    startActivity(intent);
 
-                            if (mCheckBox.isChecked()) {
-                                editor = pref.edit();
-                                editor.putString("username", mIdEt.getText().toString());
-                                editor.putString("password", mPwEt.getText().toString());
-                                editor.putBoolean("AutoLogin", true);
-                                editor.apply();
-                            }
+                    if (mCheckBox.isChecked()) {
+                        editor = pref.edit();
+                        editor.putString("username", mIdEt.getText().toString());
+                        editor.putString("password", mPwEt.getText().toString());
+                        editor.putBoolean("AutoLogin", true);
+                        editor.apply();
+                    }
+                    finish();
+                }else{
+                    alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
+                }
 
-                            finish();
-
-                        } else {
-                            switch (e.getCode()){
-                                case 101:
-                                    alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:101");
-                                    break;
-                                case 100:
-                                    alert("接続エラー","サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                                    break;
-                                default:
-                                    alert("エラー","エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-                                    break;
-                            }
-                        }
 
             });
+            httpConnector.post();
         }
     }
 
@@ -159,69 +139,47 @@ public class MainActivity extends ActionBarActivity {
         if( mIdEt.getText().toString().length() <= 3 && mPwEt.getText().toString().length() <= 5){
             alert("入力エラー","IDは4文字以上・PWは6文字以上にしてください。");
         } else {
-            Wait("サインアップ");
-            ParseUser user = new ParseUser();
 
-            user.setUsername(mIdEt.getText().toString());
-            user.setPassword(mPwEt.getText().toString());
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = (LayoutInflater) this.getSystemService(
+                    LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.dialog_et1,
+                    (ViewGroup) findViewById(R.id.dialog_layout));
 
-            user.signUpInBackground((ParseException e) -> {
+            final EditText et1 = (EditText) view.findViewById(R.id.editText1);
+            final TextView tv1 = (TextView) view.findViewById(R.id.dig_tv1);
 
-                waitDialog.dismiss();
+            tv1.setText("ニックネームを設定します。設定したいニックネームを入力してください！");
 
+            alertDialogBuilder.setTitle("ニックネーム設定");
+            alertDialogBuilder.setView(view);
+            alertDialogBuilder.setPositiveButton("OK", null);
+            alertDialogBuilder.setCancelable(true);
+            final AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
 
-                if (e == null) {
+            Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            buttonOK.setOnClickListener((View v1) -> {
+                final String str = et1.getEditableText().toString();
+                if (str.length() != 0) {
+                    HttpConnector httpConnector = new HttpConnector("http://192.168.11.2:8080/signup", "{\"user_id\":\"" + mIdEt.getText().toString() + "\",\"user_name\":\"文字列\",\"password\":\"" + mPwEt.getText().toString() + "\",\"user_name\":\"" + str +"\"}");
+                    httpConnector.setOnHttpResponseListener((String message) -> {
+                        Log.v("tag", message);
 
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                    LayoutInflater inflater = (LayoutInflater) this.getSystemService(
-                            LAYOUT_INFLATER_SERVICE);
-                    View view = inflater.inflate(R.layout.dialog_et1,
-                            (ViewGroup) findViewById(R.id.dialog_layout));
-
-                    final EditText et1 = (EditText) view.findViewById(R.id.editText1);
-                    final TextView tv1 = (TextView) view.findViewById(R.id.dig_tv1);
-
-                    tv1.setText("ニックネームを設定します。設定したいニックネームを入力してください！");
-
-                    alertDialogBuilder.setTitle("ニックネーム設定");
-                    alertDialogBuilder.setView(view);
-                    alertDialogBuilder.setPositiveButton("OK", null);
-                    alertDialogBuilder.setCancelable(false);
-                    final AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialog.show();
-
-                    Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener((View v1) -> {
-                        final String str = et1.getEditableText().toString();
-                        if (str.length() != 0) {
-                            ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-                            query.whereEqualTo("USERID", mIdEt.getText().toString());
-                            try {
-                                ParseObject po = query.getFirst();
-
-                            } catch (ParseException er) {
-                                et1.setError("グループIDが見つかりませんでした。IDを確認して下さい。");
-                            }
+                        if (Integer.parseInt(message) == 0) {
+                            alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
                         } else {
-                            et1.setError("IDを入力してください");
+                            alert("ログインエラー", "IDが重複しています。もう一度試してください。エラーコード:1");
                         }
-
+                        alertDialog.dismiss();
                     });
-                    alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
+                    httpConnector.post();
                 } else {
-                    switch (e.getCode()) {
-                        case 202:
-                            alert("登録エラー", "このIDは既に登録されています。別のIDで登録してください。エラーコード:202");
-                            break;
-                        case 100:
-                            alert("接続エラー", "サーバーに接続できません。インターネット状態を確認してください。エラーコード:100");
-                            break;
-                        default:
-                            alert("エラー", "エラーが発生しました。少し時間を空けてお試しください。それでも直らない際はサポートに連絡してください。エラーコード:" + e.getCode());
-                            break;
-                    }
+                    et1.setError("ニックネームを入力してください");
                 }
+
             });
+
         }
     }
 
