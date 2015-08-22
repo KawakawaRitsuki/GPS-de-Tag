@@ -27,7 +27,7 @@ public class HttpConnector {
         this.message = message;
     }
     public HttpConnector(String host, String message){
-        this.host = host;
+        this.host += host;
         this.message = message;
     }
     //コンストラクタここまで
@@ -64,15 +64,15 @@ public class HttpConnector {
             try {
                 URL url = new URL(host);
                 URLConnection uc = url.openConnection();
-                uc.setDoOutput(true);//POST可能にする
-                uc.setRequestProperty("Content-type", "application/json");// ヘッダを設定
-                OutputStream os = uc.getOutputStream();//POST用のOutputStreamを取得
+                uc.setDoOutput(true);
+                uc.setRequestProperty("Content-type", "application/json");
+                OutputStream os = uc.getOutputStream();
 
                 PrintStream ps = new PrintStream(os);
-                ps.print(message);//データをPOSTする
+                ps.print(message);
                 ps.close();
 
-                InputStream is = uc.getInputStream();//POSTした結果を取得
+                InputStream is = uc.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
                 StringBuffer sb = new StringBuffer();
@@ -117,3 +117,12 @@ public class HttpConnector {
     }
 
 }
+
+/*
+サンプル
+
+HttpConnector httpConnector = new HttpConnector("outgroup","{\"user_id\":\""+myId+"\",\"group_id\":\""+map.get("Member").substring(7)+"\"}");
+httpConnector.setOnHttpResponseListener((String message) -> {
+});
+httpConnector.post();
+ */

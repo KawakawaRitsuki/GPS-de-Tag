@@ -74,7 +74,7 @@ public class MainActivity extends ActionBarActivity {
         if(pref.getBoolean("AutoLogin", false)){
             Wait("自動ログイン");
 
-            HttpConnector httpConnector = new HttpConnector("http://192.168.43.8:8080/login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 Log.v("tag", message);
                 waitDialog.dismiss();
@@ -104,7 +104,7 @@ public class MainActivity extends ActionBarActivity {
         }else{
             Wait("ログイン");
 
-            HttpConnector httpConnector = new HttpConnector("http://192.168.11.2:8080/login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 Log.v("tag", message);
                 waitDialog.dismiss();
@@ -162,7 +162,7 @@ public class MainActivity extends ActionBarActivity {
             buttonOK.setOnClickListener((View v1) -> {
                 final String str = et1.getEditableText().toString();
                 if (str.length() != 0) {
-                    HttpConnector httpConnector = new HttpConnector("http://192.168.11.2:8080/signup", "{\"user_id\":\"" + mIdEt.getText().toString() + "\",\"user_name\":\"文字列\",\"password\":\"" + mPwEt.getText().toString() + "\",\"user_name\":\"" + str +"\"}");
+                    HttpConnector httpConnector = new HttpConnector("signup", "{\"user_id\":\"" + mIdEt.getText().toString() + "\",\"user_name\":\"文字列\",\"password\":\"" + mPwEt.getText().toString() + "\",\"user_name\":\"" + str +"\"}");
                     httpConnector.setOnHttpResponseListener((String message) -> {
                         Log.v("tag", message);
 
