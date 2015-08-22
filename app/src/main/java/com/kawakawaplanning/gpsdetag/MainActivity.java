@@ -21,7 +21,6 @@ import android.widget.TextView;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
-import com.parse.Parse;
 
 import java.io.IOException;
 
@@ -40,7 +39,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
 
         gcm = GoogleCloudMessaging.getInstance(this);

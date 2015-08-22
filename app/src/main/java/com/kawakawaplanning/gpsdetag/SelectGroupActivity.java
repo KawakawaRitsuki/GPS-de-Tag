@@ -3,6 +3,7 @@ package com.kawakawaplanning.gpsdetag;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -70,7 +71,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                 JSONObject json = new JSONObject(message);
                 JSONArray data = json.getJSONArray("data");
 
-                for (int i = 0; i >= data.length(); i++) {
+                for (int i = 0; i != data.length(); i++) {
 
                     JSONObject object = data.getJSONObject(i);
 
@@ -84,7 +85,7 @@ public class SelectGroupActivity extends ActionBarActivity {
                 e.printStackTrace();
             }
             mHandler.post(() -> {
-                final SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
+                SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
                 lv.setAdapter(adapter);
                 lv.setOnItemClickListener(onItem);
                 lv.setOnItemLongClickListener(onItemLong);
@@ -94,7 +95,11 @@ public class SelectGroupActivity extends ActionBarActivity {
         httpConnector.post();
     }
 
-    private AdapterView.OnItemClickListener onItem = (AdapterView<?> parent, View view, int position, long id) -> {
+
+
+    private AdapterView.OnItemClickListener onItem = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
 
             SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
@@ -106,6 +111,8 @@ public class SelectGroupActivity extends ActionBarActivity {
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
             startActivity(intent);
             finish();
+        }
+
     };
 
     private AdapterView.OnItemLongClickListener onItemLong = new AdapterView.OnItemLongClickListener(){
@@ -138,7 +145,7 @@ public class SelectGroupActivity extends ActionBarActivity {
             adb.setNegativeButton("Cancel", null);
             AlertDialog ad = adb.create();
             ad.show();
-            return false;
+            return true;
         }
     };
 

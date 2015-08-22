@@ -1,6 +1,7 @@
 package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,15 +10,18 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 import com.parse.FindCallback;
-import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -80,31 +84,34 @@ public class WaitMemberActivity extends ActionBarActivity {
 
         log = new boolean[mem.length];
 
-        Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
+        HttpConnector httpConnector = new HttpConnector("grouplogin","{\"user_id\":\""+myId+"\",\"group_id\":\""+groupId+"\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            if(Integer.parseInt(message) == 0){
 
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-        query.whereEqualTo("USERID", myId);//そのクエリの中でReceiverがname変数のものを抜き出す。
-        query.findInBackground(new FindCallback<ParseObject>() {
-            public void done(List<ParseObject> parselist, com.parse.ParseException e) {//その、name変数のものが見つかったとき
-                if (e == null) {//エラーが無ければ
-                    if (parselist.size() != 0) {
-                        ParseObject testObject = parselist.get(0);
-                        testObject.put("USERID", myId);
-                        testObject.put("LoginNow", groupId);
-                        testObject.saveInBackground();
-                    } else {
-                        ParseObject testObject = new ParseObject("TestObject");
-                        testObject.put("USERID", myId);
-                        testObject.put("LoginNow", groupId);
-                        testObject.saveInBackground();
-                    }
-                } else {
-                    e.printStackTrace();
-                }
+            }else{
+                Toast.makeText(WaitMemberActivity.this,"サーバーエラーが発生しました。時間を開けてお試しください。",Toast.LENGTH_SHORT).show();
             }
         });
+        httpConnector.post();
 
+    }
+
+    //項目をタッチした時のハイライト表示をキャンセルするためのArrayAdapter継承クラス
+    private class CustomSimpleAdapter extends SimpleAdapter {
+        //今回はこのコンストラクタしかオーバーライドしていないが、
+        //本来は3つあるので3つともオーバーライドすると良い(詳しくはListViewの公式API参照)
+        public CustomSimpleAdapter(Context context, List<? extends Map<String, ?>> data,
+                                   int resource, String[] from, int[] to) {
+            super(context,data,resource,from,to);
+        }
+
+        //以下2つをfalseで返すと選択が行えなくなる
+        public boolean areAllItemsEnabled() {
+            return false;
+        }
+        public boolean isEnabled(int position) {
+            return false;
+        }
     }
 
     @Override

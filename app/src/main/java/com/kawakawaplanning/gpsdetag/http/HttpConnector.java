@@ -121,8 +121,13 @@ public class HttpConnector {
 /*
 サンプル
 
-HttpConnector httpConnector = new HttpConnector("outgroup","{\"user_id\":\""+myId+"\",\"group_id\":\""+map.get("Member").substring(7)+"\"}");
+HttpConnector httpConnector = new HttpConnector("outgroup","");
 httpConnector.setOnHttpResponseListener((String message) -> {
+if(Integer.parseInt(message) == 0){
+//成功時
+}else{
+失敗時
+}
 });
 httpConnector.post();
  */
