@@ -1,68 +1,43 @@
 package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
-import com.parse.FindCallback;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
+import com.kawakawaplanning.gpsdetag.list.CustomAdapter;
+import com.kawakawaplanning.gpsdetag.list.CustomData;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 
 public class WaitMemberActivity extends ActionBarActivity {
-
-    private ImageView iv[];
-    private LinearLayout ll[];
-    private TextView tv[];
     
     private String myId;
-    private String mem[];
     private String groupId;
-    private boolean log[];
+
     private Timer timer;
     private Handler mHandler;
+    private ListView mListView;
+
+    private Boolean mIntentFlag = false;
 
     private void findView() {
-        iv = new ImageView[5];
-        iv[0] = (ImageView) findViewById(R.id.iv1);
-        iv[1] = (ImageView) findViewById(R.id.iv2);
-        iv[2] = (ImageView) findViewById(R.id.iv3);
-        iv[3] = (ImageView) findViewById(R.id.iv4);
-        iv[4] = (ImageView) findViewById(R.id.iv5);
-        
-        ll = new LinearLayout[5];
-        ll[0] = (LinearLayout) findViewById(R.id.ll1);
-        ll[1] = (LinearLayout) findViewById(R.id.ll2);
-        ll[2] = (LinearLayout) findViewById(R.id.ll3);
-        ll[3] = (LinearLayout) findViewById(R.id.ll4);
-        ll[4] = (LinearLayout) findViewById(R.id.ll5);
-
-        tv = new TextView[5];
-        tv[0] = (TextView) findViewById(R.id.tv1);
-        tv[1] = (TextView) findViewById(R.id.tv2);
-        tv[2] = (TextView) findViewById(R.id.tv3);
-        tv[3] = (TextView) findViewById(R.id.tv4);
-        tv[4] = (TextView) findViewById(R.id.tv5);
-        
-        for(int i=0; i != mem.length;i++)
-            ll[i].setVisibility(View.VISIBLE);
+        mListView = (ListView)findViewById(R.id.listView);
     }
 
     @Override
@@ -71,123 +46,94 @@ public class WaitMemberActivity extends ActionBarActivity {
 
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
-        mem = pref.getString("mem", "").split(",");
         groupId = pref.getString("groupId", "");
         mHandler = new Handler();
 
         setContentView(R.layout.activity_member_wait);
         findView();
 
-        for(int i = 0; i != mem.length;i++){
-            tv[i].setText(mem[i]);
-        }
-
-        log = new boolean[mem.length];
-
         HttpConnector httpConnector = new HttpConnector("grouplogin","{\"user_id\":\""+myId+"\",\"group_id\":\""+groupId+"\"}");
         httpConnector.setOnHttpResponseListener((String message) -> {
-            if(Integer.parseInt(message) == 0){
-
-            }else{
-                Toast.makeText(WaitMemberActivity.this,"サーバーエラーが発生しました。時間を開けてお試しください。",Toast.LENGTH_SHORT).show();
+            if (Integer.parseInt(message) == 1) {
+                Toast.makeText(WaitMemberActivity.this, "サーバーエラーが発生しました。時間を開けてお試しください。", Toast.LENGTH_SHORT).show();
             }
         });
         httpConnector.post();
-
+        loginCheck(groupId);
     }
 
-    //項目をタッチした時のハイライト表示をキャンセルするためのArrayAdapter継承クラス
-    private class CustomSimpleAdapter extends SimpleAdapter {
-        //今回はこのコンストラクタしかオーバーライドしていないが、
-        //本来は3つあるので3つともオーバーライドすると良い(詳しくはListViewの公式API参照)
-        public CustomSimpleAdapter(Context context, List<? extends Map<String, ?>> data,
-                                   int resource, String[] from, int[] to) {
-            super(context,data,resource,from,to);
-        }
 
-        //以下2つをfalseで返すと選択が行えなくなる
-        public boolean areAllItemsEnabled() {
-            return false;
-        }
-        public boolean isEnabled(int position) {
-            return false;
-        }
-    }
 
     @Override
     protected void onStart() {
         super.onStart();
 
         timer = new Timer();
-        final Handler handler = new Handler();
         TimerTask task = new TimerTask() {
             public void run() {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int a = 0; a != mem.length; a++) {
-                            if (loginNow(mem[a])) {
-                                iv[a].setImageResource(R.drawable.icon_success);
-                                log[a] = true;
-                            } else {
-                                iv[a].setImageResource(R.drawable.icon_error);
-                                log[a] = false;
-                            }
-                        }
-                    }
-                });
-
-                boolean frag = true;
-                for (boolean b : log) {
-                    if (!b)
-                        frag = false;
-                }
-                if (frag) {
-                    ParseQuery<ParseObject> query = ParseQuery.getQuery(groupId);
-                    query.findInBackground(new FindCallback<ParseObject>() {
-                        @Override
-                        public void done(List<ParseObject> list, ParseException e) {
-                            for (ParseObject po:list){
-                                po.deleteInBackground();
-                            }
-                        }
-                    });
-
-                    Intent intent = new Intent();
-                    intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
-                    startActivity(intent);
-                    timer.cancel();
-                    finish();
-                }
+                mHandler.post(() -> loginCheck(groupId));
             }
         };
         timer.schedule(task, 500, 1000);
     }
 
-    public boolean loginNow(String userName){
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");//ParseObject型のParseQueryを取得する。
-        query.whereEqualTo("USERID", userName);
-        try {
-            List<ParseObject> list = query.find();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timer.cancel();
+        if(!mIntentFlag) {
+            HttpConnector httpConnector = new HttpConnector("grouplogin", "{\"user_id\":\"" + myId + "\",\"group_id\":\"\"}");
+            httpConnector.setOnHttpResponseListener((String message) -> {
+                if (Integer.parseInt(message) == 1) {
+                    Toast.makeText(WaitMemberActivity.this, "サーバーエラーが発生しました。時間を開けてお試しください。", Toast.LENGTH_SHORT).show();
+                }
+            });
+            httpConnector.post();
+        }
+    }
 
-            ParseObject po = list.get(0);
-            final String obId = po.getObjectId();
+    public void loginCheck(String groupId){
+        HttpConnector httpConnector = new HttpConnector("loginstate","{\"group_id\":\"" + groupId + "\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            Bitmap successImage = BitmapFactory.decodeResource(getResources(), R.drawable.icon_success);
+            Bitmap errorImage = BitmapFactory.decodeResource(getResources(), R.drawable.icon_error);
 
-            final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");//その、ObjectIDで参照できるデータの内容をParseObject型のParseQueryで取得
+            List<CustomData> objects = new ArrayList<CustomData>();
 
             try {
-                if(groupId.equals(que.get(obId).getString("LoginNow"))){
-                    return true;
-                }else{
-                    return false;
+                JSONObject json = new JSONObject(message);
+                JSONArray data = json.getJSONArray("data");
+
+                Boolean flag = true;
+                for (int i = 0; i != data.length(); i++) {
+
+                    JSONObject object = data.getJSONObject(i);
+                    CustomData item = new CustomData();
+                    if(object.getString("login_now").equals(groupId)) {
+                        item.setImagaData(successImage);
+                    } else {
+                        item.setImagaData(errorImage);
+                        flag=false;
+                    }
+
+                    item.setTextData(object.getString("user_name") + "(" + object.getString("user_id") + ")");
+                    objects.add(item);
+                }
+                if(flag) {
+                    mIntentFlag = true;
+                    Intent intent = new Intent();
+                    intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
+                    startActivity(intent);
+                    finish();
                 }
 
-            } catch (ParseException e1) {
-                e1.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return false;
+            CustomAdapter customAdapter = new CustomAdapter(this, 0, objects);
+            mListView.setAdapter(customAdapter);
+
+        });
+        httpConnector.post();
     }
 }

@@ -3,7 +3,6 @@ package com.kawakawaplanning.gpsdetag;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,7 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -201,38 +199,37 @@ public class SelectGroupActivity extends ActionBarActivity {
         alertDialogBuilder.setView(view);
         alertDialogBuilder.setPositiveButton("OK", null);
         alertDialogBuilder.setCancelable(true);
-        final AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
 
-        Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        buttonOK.setOnClickListener((View v1) -> {
+        alertDialogBuilder.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             final String str = et1.getEditableText().toString();
             if (!str.isEmpty()) {
-                HttpConnector httpConnector = new HttpConnector("ingroup","{\"user_id\":\""+myId+"\",\"group_id\":\""+str+"\"}");
+                HttpConnector httpConnector = new HttpConnector("ingroup", "{\"user_id\":\"" + myId + "\",\"group_id\":\"" + str + "\"}");
                 httpConnector.setOnHttpResponseListener((String message) -> {
-                        if (Integer.parseInt(message) == 0) {
-                            AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                            adb.setCancelable(true);
-                            adb.setTitle("グループ加入完了");
-                            adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
-                            adb.setPositiveButton("OK", null);
-                            AlertDialog ad = adb.create();
-                            ad.show();
-                            listLoad();
-                        }else{
-                            AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                            adb.setCancelable(true);
-                            adb.setTitle("エラー");
-                            adb.setMessage("エラーが発生しました。グループIDを確認してもう一度お試しください。");
-                            adb.setPositiveButton("OK", null);
-                            AlertDialog ad = adb.create();
-                            ad.show();
-                        }
-                    });
-                    httpConnector.post();
-                }
+                    if (Integer.parseInt(message) == 0) {
+                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                        adb.setCancelable(true);
+                        adb.setTitle("グループ加入完了");
+                        adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
+                        adb.setPositiveButton("OK", null);
+                        AlertDialog ad = adb.create();
+                        ad.show();
+                        listLoad();
+                    } else {
+                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                        adb.setCancelable(true);
+                        adb.setTitle("エラー");
+                        adb.setMessage("エラーが発生しました。グループIDを確認してもう一度お試しください。");
+                        adb.setPositiveButton("OK", null);
+                        AlertDialog ad = adb.create();
+                        ad.show();
+                    }
+                });
+                httpConnector.post();
+            }
+        });
 
-            });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
     private void Wait(String what){
         waitDialog = new ProgressDialog(this);

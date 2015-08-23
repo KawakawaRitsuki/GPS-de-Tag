@@ -6,7 +6,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
@@ -19,10 +18,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
-
-import java.io.IOException;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -40,9 +36,6 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
-
-        gcm = GoogleCloudMessaging.getInstance(this);
-        registerInBackground();
 
         findView();
         autoLogin();
@@ -197,28 +190,4 @@ public class MainActivity extends ActionBarActivity {
         ad.show();
     }
 
-    private GoogleCloudMessaging gcm;
-    private void registerInBackground() {
-        new AsyncTask<Void, Void, String>() {
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    if (gcm == null) {
-                        gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
-                    }
-                    String regid = gcm.register("386036556837");
-                    msg = "Device registered, registration ID=" + regid;
-                } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                }
-                return msg;
-            }
-
-            @Override
-            protected void onPostExecute(String msg) {
-                Log.v("kp",msg);
-            }
-        }.execute(null, null, null);
-    }
 }
