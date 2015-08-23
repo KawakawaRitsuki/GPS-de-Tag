@@ -59,7 +59,6 @@ public class WaitMemberActivity extends ActionBarActivity {
             }
         });
         httpConnector.post();
-        loginCheck(groupId);
     }
 
 

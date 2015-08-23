@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -22,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -30,14 +32,12 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.parse.Parse;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseUser;
+import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,20 +76,20 @@ public class MapsActivity extends FragmentActivity {
         chatTv = (TextView)findViewById(R.id.chatTv);
 
         chatEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN
-                    && keyCode == KeyEvent.KEYCODE_ENTER) {
-                try {
-                    ParseObject groupObject = new ParseObject(groupId);
-                    groupObject.put("Message", chatEt.getEditableText().toString());
-                    groupObject.put("From", myId);
-                    groupObject.put("To", spinner.getSelectedItem().toString());
-                    groupObject.save();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                chatEt.setText(null);
-                return true;
-            }
+//            if (event.getAction() == KeyEvent.ACTION_DOWN
+//                    && keyCode == KeyEvent.KEYCODE_ENTER) {
+//                try {
+//                    ParseObject groupObject = new ParseObject(groupId);
+//                    groupObject.put("Message", chatEt.getEditableText().toString());
+//                    groupObject.put("From", myId);
+//                    groupObject.put("To", spinner.getSelectedItem().toString());
+//                    groupObject.save();
+//                } catch (ParseException e) {
+//                    e.printStackTrace();
+//                }
+//                chatEt.setText(null);
+//                return true;
+//            }
             return false;
         });
 
@@ -97,8 +97,6 @@ public class MapsActivity extends FragmentActivity {
             chatIv.setVisibility(View.INVISIBLE);
             chatLl.setVisibility(View.INVISIBLE);
         });
-
-        Parse.initialize(this, "GGhf5EisfvSx54MFMOYhF1Kugk2qTHeeEvCg5ymV", "mmaiRNaqOsqbQe5FqwA4M28EttAG3TOW43OfVXcw");
 
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
@@ -137,18 +135,19 @@ public class MapsActivity extends FragmentActivity {
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setTitle("確認");
         adb.setMessage("本当にログアウトしますか？");
-        adb.setPositiveButton("OK",(DialogInterface dialog, int which) -> {
+        adb.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             finish = true;
-            ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
-            query.whereEqualTo("USERID", myId);
-            query.findInBackground((List<ParseObject> list, ParseException e) -> {
-                ParseObject testObject = list.get(0);
-                testObject.put("LoginNow", "gB9xRLYJ3V4x");
-                testObject.saveInBackground();
+            HttpConnector httpConnector = new HttpConnector("outgroup", "{\"user_id\":\"" + myId + "\"");
+            httpConnector.setOnHttpResponseListener((String message) -> {
+                if (Integer.parseInt(message) == 0) {
+                    finish();
+                } else {
+                    Toast.makeText(MapsActivity.this, "サーバーエラーが発生しました。強制的に終了しました。", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             });
-            stopService(new Intent(MapsActivity.this, SendService.class));
-            ParseUser.logOutInBackground();
-            finish();
+            httpConnector.post();
+
         });
         adb.setNegativeButton("Cancel", null);
         adb.show();
@@ -160,8 +159,6 @@ public class MapsActivity extends FragmentActivity {
         chatTv.setText(SendService.chatTxt);
     }
 
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -169,9 +166,9 @@ public class MapsActivity extends FragmentActivity {
         timer.schedule(
                 new TimerTask() {
                     public void run() {
-                        handler.post(() -> chatTv.setText(SendService.chatTxt));
+//                        handler.post(() -> chatTv.setText(SendService.chatTxt));
 
-                        new Thread(() -> getLocate(mem)).start();
+                        new Thread(() -> getLocate()).start();
                     }
                 }, 5000, 5000);
 
@@ -198,44 +195,28 @@ public class MapsActivity extends FragmentActivity {
         googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos));
     }
 
-    public void getLocate(final String name[]){
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("TestObject");
-        i = 0;
-        for(final String id:name) {
-            if(!id.equals(myId)) {
+    public void getLocate(){
+        handler.post(() -> {
+            HttpConnector httpConnector = new HttpConnector("getlocate","{\"group_id\":\"" + groupId + "\"}");
+            httpConnector.setOnHttpResponseListener((String message) -> {
+                Log.v("kp", message);
                 try {
-                    ParseQuery<ParseObject> q = query.whereEqualTo("USERID", id);
-                    ParseObject po = q.find().get(0);
-                    final String obId = po.getObjectId();
-                    final ParseQuery<ParseObject> que = ParseQuery.getQuery("TestObject");
-                    if(que.get(obId).getString("LoginNow").equals(groupId)) {
-                        try {
-                            setMarker(i, que.get(obId).getString("UserName"),que.get(obId).getDouble("Latitude"), que.get(obId).getDouble("Longiutude"));
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                    }else{
-                        handler.post(()->{
-                            marker.get(i).remove();
-                            AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-                            adb.setCancelable(true);
-                            adb.setTitle("通知");
-                            adb.setMessage(id + "さんが退出しました");
-                            adb.setPositiveButton("OK", null);
-                            AlertDialog ad = adb.create();
-                            ad.show();
-                            List<String> list = new ArrayList<>(Arrays.asList(mem)); // 新インスタンスを生成
-                            list.remove(id);
-                            mem = list.toArray(new String[list.size()]);
-                        });
+                    JSONObject json = new JSONObject(message);
+                    JSONArray data = json.getJSONArray("data");
+
+                    for (int i = 0; i != data.length(); i++) {
+                        JSONObject object = data.getJSONObject(i);
+                        setMarker(i, object.getString("user_name"), object.getDouble("latitude"), object.getDouble("longitude"));
                     }
-                } catch (ParseException e) {
+
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                i++;
-            }
-        }
+
+            });
+            httpConnector.post();
+        });
+
     }
 
     public void setMarker(final int id,final String name,final double lat,final double lon){
