@@ -15,14 +15,7 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -54,14 +47,7 @@ public class MapsActivity extends FragmentActivity {
     static public String[] mem;
     Timer timer;
     private NotificationManager nm;
-    LinearLayout chatLl;
-    ImageView chatIv;
-    TextView chatTv;
-    EditText chatEt;
-    Spinner spinner;
     SharedPreferences pref;
-
-    int i ;
 
     boolean finish = false;
 
@@ -70,50 +56,10 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        chatLl = (LinearLayout)findViewById(R.id.chatLL);
-        chatIv = (ImageView)findViewById(R.id.chatCloseBtn);
-        chatEt = (EditText)findViewById(R.id.chatEt);
-        chatTv = (TextView)findViewById(R.id.chatTv);
-
-        chatEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
-//            if (event.getAction() == KeyEvent.ACTION_DOWN
-//                    && keyCode == KeyEvent.KEYCODE_ENTER) {
-//                try {
-//                    ParseObject groupObject = new ParseObject(groupId);
-//                    groupObject.put("Message", chatEt.getEditableText().toString());
-//                    groupObject.put("From", myId);
-//                    groupObject.put("To", spinner.getSelectedItem().toString());
-//                    groupObject.save();
-//                } catch (ParseException e) {
-//                    e.printStackTrace();
-//                }
-//                chatEt.setText(null);
-//                return true;
-//            }
-            return false;
-        });
-
-        chatIv.setOnClickListener((View v) -> {
-            chatIv.setVisibility(View.INVISIBLE);
-            chatLl.setVisibility(View.INVISIBLE);
-        });
-
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid","");
         mem = pref.getString("mem","").split(",");
         groupId = pref.getString("groupId", "");
-
-        spinner = (Spinner)findViewById(R.id.spinner);
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        adapter.add("All");
-        for (String str:mem){
-            if(!str.equals(myId))
-                adapter.add(str);
-        }
-        spinner.setAdapter(adapter);
-
 
         handler = new Handler();
 
@@ -124,10 +70,6 @@ public class MapsActivity extends FragmentActivity {
 
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
-
-        if(getIntent().getBooleanExtra("from",false)){
-            chatBtn(null);
-        }
 
     }
 
@@ -153,12 +95,6 @@ public class MapsActivity extends FragmentActivity {
         adb.show();
     }
 
-    public void chatBtn(View v){
-        chatIv.setVisibility(View.VISIBLE);
-        chatLl.setVisibility(View.VISIBLE);
-        chatTv.setText(SendService.chatTxt);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -166,11 +102,9 @@ public class MapsActivity extends FragmentActivity {
         timer.schedule(
                 new TimerTask() {
                     public void run() {
-//                        handler.post(() -> chatTv.setText(SendService.chatTxt));
-
                         new Thread(() -> getLocate()).start();
                     }
-                }, 5000, 5000);
+                }, 1000, 1000);
 
         nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int nId = R.string.app_name;
@@ -240,11 +174,11 @@ public class MapsActivity extends FragmentActivity {
     protected void onStop() {
         super.onStop();
         timer.cancel();
-        notificate();
+        notification();
         myId = null;
     }
 
-    public void notificate(){
+    public void notification(){
         if(!finish) {
             Intent _intent = new Intent(this, MapsActivity.class);
             _intent.putExtra("name", myId);

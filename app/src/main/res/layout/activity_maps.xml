@@ -25,69 +25,8 @@
                 android:onClick="onClick"
                 android:layout_gravity="left|top" />
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="チャット"
-                android:id="@+id/chatBtn"
-                android:layout_gravity="bottom|right"
-                android:onClick="chatBtn"/>
         </FrameLayout>
 
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#aa000000"
-            android:visibility="invisible"
-            android:id="@+id/chatLL">
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:id="@+id/scrollView2"
-                android:fillViewport="true">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/chatTv"
-                    android:textColor="#FFFFFF"
-                    android:gravity="bottom"
-                    android:textSize="24dp"/>
-            </ScrollView>
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal">
-
-                <Spinner
-                    android:layout_width="89dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/spinner"
-                    android:background="#FFFFFF"/>
-
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/chatEt"
-                    android:textSize="20dp"
-                    android:textColor="#FFFFFF"
-                    android:inputType="text" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:id="@+id/chatCloseBtn"
-            android:layout_gravity="right"
-            android:src="@drawable/abc_ic_clear_mtrl_alpha"
-            android:visibility="invisible"/>
     </FrameLayout>
 
 </LinearLayout>

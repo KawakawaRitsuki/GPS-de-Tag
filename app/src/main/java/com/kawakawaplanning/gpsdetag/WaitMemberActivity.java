@@ -70,10 +70,12 @@ public class WaitMemberActivity extends ActionBarActivity {
         timer = new Timer();
         TimerTask task = new TimerTask() {
             public void run() {
-                mHandler.post(() -> loginCheck(groupId));
+                if(!mIntentFlag) {
+                    mHandler.post(() -> loginCheck(groupId));
+                }
             }
         };
-        timer.schedule(task, 500, 1000);
+        timer.schedule(task, 0, 1000);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class WaitMemberActivity extends ActionBarActivity {
             Bitmap successImage = BitmapFactory.decodeResource(getResources(), R.drawable.icon_success);
             Bitmap errorImage = BitmapFactory.decodeResource(getResources(), R.drawable.icon_error);
 
-            List<CustomData> objects = new ArrayList<CustomData>();
+            List<CustomData> objects = new ArrayList<>();
 
             try {
                 JSONObject json = new JSONObject(message);

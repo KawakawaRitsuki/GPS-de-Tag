@@ -81,7 +81,8 @@ public class HttpConnector {
                     sb.append(s);
                 }
                 handler.post(() -> {
-                    listener.onPostResponse(sb.toString());
+                    if(listener != null)
+                        listener.onPostResponse(sb.toString());
                 });
                 reader.close();
             } catch (MalformedURLException e) {
@@ -126,7 +127,7 @@ httpConnector.setOnHttpResponseListener((String message) -> {
 if(Integer.parseInt(message) == 0){
 //成功時
 }else{
-失敗時
+//失敗時
 }
 });
 httpConnector.post();
