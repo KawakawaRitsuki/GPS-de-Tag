@@ -87,17 +87,23 @@ public class SelectGroupActivity extends ActionBarActivity {
                 lv.setAdapter(adapter);
                 lv.setOnItemClickListener(onItem);
                 lv.setOnItemLongClickListener(onItemLong);
-                waitDialog.dismiss();
             });
+        });
+        httpConnector.setOnHttpErrorListener((int error) -> {
+            waitDialog.dismiss();
+            android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+            adb.setTitle("接続エラー");
+            adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+            adb.setPositiveButton("OK", null);
+            adb.setCancelable(true);
+            adb.show();
         });
         httpConnector.post();
     }
 
 
 
-    private AdapterView.OnItemClickListener onItem = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    private AdapterView.OnItemClickListener onItem = (AdapterView<?> parent, View view, int position, long id) -> {
             Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
 
             SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
@@ -109,8 +115,6 @@ public class SelectGroupActivity extends ActionBarActivity {
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.WaitMemberActivity");
             startActivity(intent);
             finish();
-        }
-
     };
 
     private AdapterView.OnItemLongClickListener onItemLong = new AdapterView.OnItemLongClickListener(){
@@ -136,6 +140,15 @@ public class SelectGroupActivity extends ActionBarActivity {
                             Toast.makeText(getApplicationContext(),"エラーが発生しました。時間を開けて試してください。それでもダメな場合はサポートに連絡してください。",Toast.LENGTH_SHORT).show();
                         }
                         listLoad();
+                    });
+                    httpConnector.setOnHttpErrorListener((int error) -> {
+                        waitDialog.dismiss();
+                        android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+                        adb.setTitle("接続エラー");
+                        adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                        adb.setPositiveButton("OK", null);
+                        adb.setCancelable(true);
+                        adb.show();
                     });
                     httpConnector.post();
                 }
@@ -174,6 +187,14 @@ public class SelectGroupActivity extends ActionBarActivity {
                     AlertDialog ad = adb.create();
                     ad.show();
                     listLoad();
+                });
+                httpConnector.setOnHttpErrorListener((int error) -> {
+                    android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+                    adb.setTitle("接続エラー");
+                    adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                    adb.setPositiveButton("OK", null);
+                    adb.setCancelable(true);
+                    adb.show();
                 });
                 httpConnector.post();
             }
@@ -223,6 +244,14 @@ public class SelectGroupActivity extends ActionBarActivity {
                         AlertDialog ad = adb.create();
                         ad.show();
                     }
+                });
+                httpConnector.setOnHttpErrorListener((int error) -> {
+                    android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+                    adb.setTitle("接続エラー");
+                    adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                    adb.setPositiveButton("OK", null);
+                    adb.setCancelable(true);
+                    adb.show();
                 });
                 httpConnector.post();
             }

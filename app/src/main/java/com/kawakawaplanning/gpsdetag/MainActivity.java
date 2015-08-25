@@ -35,7 +35,15 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+
+        if(pref.getBoolean("loginnow",false)){
+            Intent intent = new Intent();
+            intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
+            startActivity(intent);
+            finish();
+        }
 
         findView();
         autoLogin();
@@ -82,6 +90,15 @@ public class MainActivity extends ActionBarActivity {
                 }
 
             });
+            httpConnector.setOnHttpErrorListener((int error) -> {
+                waitDialog.dismiss();
+                android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+                adb.setTitle("接続エラー");
+                adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                adb.setPositiveButton("OK", null);
+                adb.setCancelable(true);
+                adb.show();
+            });
             httpConnector.post();
 
         }
@@ -89,9 +106,8 @@ public class MainActivity extends ActionBarActivity {
 
     public void login(){
 
-        String putId = mIdEt.getText().toString();
-        if (putId == null){
-            alert("入力エラー","IDが入力されていません。入力してください。");
+        if ( mIdEt.getText().toString().length() == 0 || mPwEt.getText().toString().length() == 0){
+            alert("入力エラー","ID/PWが入力されていません。入力してください。");
         }else{
             Wait("ログイン");
 
@@ -120,6 +136,15 @@ public class MainActivity extends ActionBarActivity {
                 }
 
 
+            });
+            httpConnector.setOnHttpErrorListener((int error) -> {
+                waitDialog.dismiss();
+                android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+                adb.setTitle("接続エラー");
+                adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                adb.setPositiveButton("OK", null);
+                adb.setCancelable(true);
+                adb.show();
             });
             httpConnector.post();
         }

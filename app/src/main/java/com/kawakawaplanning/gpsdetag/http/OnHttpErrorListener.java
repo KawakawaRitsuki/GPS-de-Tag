@@ -5,8 +5,8 @@ import java.util.EventListener;
 /**
  * Created by KP on 15/08/14.
  */
-public interface OnHttpResponseListener extends EventListener {
+public interface OnHttpErrorListener extends EventListener {
 
-    void onResponse(String response);
+    void onError(int error);
 
 }

@@ -3,7 +3,6 @@ package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -13,6 +12,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
@@ -39,15 +39,14 @@ import java.util.TimerTask;
 
 public class MapsActivity extends FragmentActivity {
 
-    static public GoogleMap googleMap;
-    static public String myId;
-    private String groupId;
-    private Handler handler;
-    private Map<Integer, Marker> marker= new HashMap<>();
-    static public String[] mem;
-    Timer timer;
-    private NotificationManager nm;
-    SharedPreferences pref;
+    static public GoogleMap mGoogleMap;
+    static public String mMyId;
+    private String mGroupId;
+    private Handler mHandler;
+    private Map<Integer, Marker> mMarker= new HashMap<>();
+    Timer mTimer;
+    private NotificationManager mNm;
+    SharedPreferences mPref;
 
     boolean finish = false;
 
@@ -56,17 +55,18 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
-        myId = pref.getString("loginid","");
-        mem = pref.getString("mem","").split(",");
-        groupId = pref.getString("groupId", "");
+        mPref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
+        mMyId = mPref.getString("loginid", "");
+        mGroupId = mPref.getString("groupId", "");
 
-        handler = new Handler();
+        SharedPreferences.Editor editor = mPref.edit();
+        editor.putBoolean("loginnow", true);
+        editor.apply();
 
-        googleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
+        mHandler = new Handler();
+        mGoogleMap =  ( (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map) ).getMap();
+
         mapInit();
-
-
 
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
@@ -79,17 +79,30 @@ public class MapsActivity extends FragmentActivity {
         adb.setMessage("本当にログアウトしますか？");
         adb.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             finish = true;
-            HttpConnector httpConnector = new HttpConnector("outgroup", "{\"user_id\":\"" + myId + "\"");
+            HttpConnector httpConnector = new HttpConnector("grouplogout", "{\"user_id\":\"" + mMyId + "\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 if (Integer.parseInt(message) == 0) {
+                    SharedPreferences.Editor editor = mPref.edit();
+                    editor.putBoolean("loginnow", false);
+                    editor.apply();
                     finish();
                 } else {
+                    SharedPreferences.Editor editor = mPref.edit();
+                    editor.putBoolean("loginnow", false);
+                    editor.apply();
                     Toast.makeText(MapsActivity.this, "サーバーエラーが発生しました。強制的に終了しました。", Toast.LENGTH_SHORT).show();
                     finish();
                 }
             });
+            httpConnector.setOnHttpErrorListener((int error) -> {
+                android.support.v7.app.AlertDialog.Builder adbs = new android.support.v7.app.AlertDialog.Builder(MapsActivity.this);
+                adbs.setTitle("接続エラー");
+                adbs.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                adbs.setPositiveButton("OK", null);
+                adbs.setCancelable(true);
+                adbs.show();
+            });
             httpConnector.post();
-
         });
         adb.setNegativeButton("Cancel", null);
         adb.show();
@@ -98,20 +111,21 @@ public class MapsActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        timer = new Timer();
-        timer.schedule(
+        mTimer = new Timer();
+        mTimer.schedule(
                 new TimerTask() {
                     public void run() {
-                        new Thread(() -> getLocate()).start();
+                        new Thread(MapsActivity.this::setLocate).start();
                     }
                 }, 1000, 1000);
 
-        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int nId = R.string.app_name;
-        nm.cancel(nId);
-        nm.cancel(nId+1);
-        myId = pref.getString("loginid", "");
+        mNm.cancel(nId);
+        mNm.cancel(nId + 1);
+        mMyId = mPref.getString("loginid", "");
     }
+
     public boolean isServiceRunning(Context c, Class<?> cls) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningServiceInfo> runningService = am.getRunningServices(Integer.MAX_VALUE);
@@ -122,16 +136,17 @@ public class MapsActivity extends FragmentActivity {
         }
         return false;
     }
+
     private void mapInit() {
-        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        googleMap.setMyLocationEnabled(true);
+        mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mGoogleMap.setMyLocationEnabled(true);
         CameraPosition cameraPos = new CameraPosition.Builder().target(new LatLng(38.2586, 137.6850)).zoom(4.5f).build();
-        googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPos));
     }
 
-    public void getLocate(){
-        handler.post(() -> {
-            HttpConnector httpConnector = new HttpConnector("getlocate","{\"group_id\":\"" + groupId + "\"}");
+    public void setLocate(){
+        mHandler.post(() -> {
+            HttpConnector httpConnector = new HttpConnector("getlocate", "{\"group_id\":\"" + mGroupId + "\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 Log.v("kp", message);
                 try {
@@ -148,22 +163,30 @@ public class MapsActivity extends FragmentActivity {
                 }
 
             });
+            httpConnector.setOnHttpErrorListener((int error) -> {
+                android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(MapsActivity.this);
+                adb.setTitle("接続エラー");
+                adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                adb.setPositiveButton("OK", null);
+                adb.setCancelable(true);
+                adb.show();
+            });
             httpConnector.post();
         });
 
     }
 
     public void setMarker(final int id,final String name,final double lat,final double lon){
-        handler.post(() -> {
-                    if (marker.get(id) == null) {
+        mHandler.post(() -> {
+                    if (mMarker.get(id) == null) {
                         LatLng latLng = new LatLng(lat, lon);
                         MarkerOptions markerOptions = new MarkerOptions();
                         markerOptions.position(latLng);
                         markerOptions.title(name);
-                        marker.put(id, googleMap.addMarker(markerOptions));
-                    }else{
+                        mMarker.put(id, mGoogleMap.addMarker(markerOptions));
+                    } else {
                         LatLng latLng = new LatLng(lat, lon);
-                        marker.get(id).setPosition(latLng);
+                        mMarker.get(id).setPosition(latLng);
                     }
                 }
         );
@@ -173,15 +196,15 @@ public class MapsActivity extends FragmentActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        timer.cancel();
+        mTimer.cancel();
         notification();
-        myId = null;
+        mMyId = null;
     }
 
     public void notification(){
         if(!finish) {
             Intent _intent = new Intent(this, MapsActivity.class);
-            _intent.putExtra("name", myId);
+            _intent.putExtra("name", mMyId);
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
@@ -195,7 +218,7 @@ public class MapsActivity extends FragmentActivity {
 
 
             int nId = R.string.app_name;
-            nm.notify(nId, builder.build());
+            mNm.notify(nId, builder.build());
         }
     }
 }

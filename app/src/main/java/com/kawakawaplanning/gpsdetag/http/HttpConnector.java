@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -19,7 +18,8 @@ public class HttpConnector {
 
     String host = "http://192.168.11.2:8080/";
     String message = "";
-    private OnHttpResponseListener listener = null;
+    private OnHttpResponseListener resLis = null;
+    private OnHttpErrorListener errLis = null;
 
     //コンストラクタここから
     public HttpConnector(){}
@@ -34,12 +34,13 @@ public class HttpConnector {
 
     //ゲット用コマンド
     public void get(){
+        Handler handler = new Handler();
         new Thread(() -> {
             try {
                 URL url = new URL(host);
                 URLConnection uc = url.openConnection();
 
-                InputStream is = uc.getInputStream();//POSTした結果を取得
+                InputStream is = uc.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
                 StringBuffer sb = new StringBuffer();
@@ -47,12 +48,17 @@ public class HttpConnector {
                 while ((s = reader.readLine()) != null) {
                     sb.append(s);
                 }
-                listener.onPostResponse(sb.toString());
+                handler.post(() -> {
+                    if (resLis != null)
+                        resLis.onResponse(sb.toString());
+                });
                 reader.close();
-            } catch (MalformedURLException e) {
-                System.err.println("Invalid URL format: " + host);
+
             } catch (IOException e) {
-                System.err.println("Can't connect to " + host);
+                handler.post(() -> {
+                    if (errLis != null)
+                        errLis.onError(0);
+                });
             }
         }).start();
     }
@@ -81,14 +87,16 @@ public class HttpConnector {
                     sb.append(s);
                 }
                 handler.post(() -> {
-                    if(listener != null)
-                        listener.onPostResponse(sb.toString());
+                    if (resLis != null)
+                        resLis.onResponse(sb.toString());
                 });
                 reader.close();
-            } catch (MalformedURLException e) {
-                System.err.println("Invalid URL format: " + host);
+
             } catch (IOException e) {
-                System.err.println("Can't connect to " + host);
+                handler.post(() -> {
+                    if (errLis != null)
+                        errLis.onError(0);
+                });
             }
         }).start();
     }
@@ -110,11 +118,18 @@ public class HttpConnector {
     }
 
     public void setOnHttpResponseListener(OnHttpResponseListener listener){
-        this.listener = listener;
+        this.resLis = listener;
     }
 
-    public void removeListener(){
-        this.listener = null;
+    public void setOnHttpErrorListener(OnHttpErrorListener listener){
+        this.errLis = listener;
+    }
+
+    public void removeResponseListener(){
+        this.resLis = null;
+    }
+    public void removeErreListener(){
+        this.errLis = null;
     }
 
 }

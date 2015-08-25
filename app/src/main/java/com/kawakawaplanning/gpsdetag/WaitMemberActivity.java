@@ -30,7 +30,7 @@ public class WaitMemberActivity extends ActionBarActivity {
     private String myId;
     private String groupId;
 
-    private Timer timer;
+    private Timer mTimer;
     private Handler mHandler;
     private ListView mListView;
 
@@ -47,6 +47,7 @@ public class WaitMemberActivity extends ActionBarActivity {
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
         groupId = pref.getString("groupId", "");
+
         mHandler = new Handler();
 
         setContentView(R.layout.activity_member_wait);
@@ -59,6 +60,7 @@ public class WaitMemberActivity extends ActionBarActivity {
             }
         });
         httpConnector.post();
+
     }
 
 
@@ -67,7 +69,7 @@ public class WaitMemberActivity extends ActionBarActivity {
     protected void onStart() {
         super.onStart();
 
-        timer = new Timer();
+        mTimer = new Timer();
         TimerTask task = new TimerTask() {
             public void run() {
                 if(!mIntentFlag) {
@@ -75,13 +77,13 @@ public class WaitMemberActivity extends ActionBarActivity {
                 }
             }
         };
-        timer.schedule(task, 0, 1000);
+        mTimer.schedule(task, 0, 1000);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        timer.cancel();
+        mTimer.cancel();
         if(!mIntentFlag) {
             HttpConnector httpConnector = new HttpConnector("grouplogin", "{\"user_id\":\"" + myId + "\",\"group_id\":\"\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {

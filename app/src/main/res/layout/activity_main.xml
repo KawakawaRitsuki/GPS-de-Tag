@@ -75,7 +75,7 @@
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="このアプリは、ファイルを送受信するアプリです。"
+        android:text="このアプリは、友達と位置を教えあうアプリです！"
         android:textColor="#79bbff" />
 
 </LinearLayout>
