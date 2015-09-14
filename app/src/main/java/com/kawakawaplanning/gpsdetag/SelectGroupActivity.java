@@ -39,18 +39,30 @@ public class SelectGroupActivity extends ActionBarActivity {
     private ListView lv;
     private ProgressDialog waitDialog;
     private Handler mHandler;
+    SharedPreferences pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_group);
 
-        SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
         mHandler = new Handler();
 
         findView();
         listLoad();
+    }
+
+    public void logout(View v){
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("username", "");
+        editor.putString("password", "");
+        editor.putBoolean("AutoLogin", false);
+        editor.apply();
+
+        startActivity(new Intent(this,MainActivity.class));
+        finish();
     }
 
     private void findView(){
@@ -224,26 +236,102 @@ public class SelectGroupActivity extends ActionBarActivity {
         alertDialogBuilder.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             final String str = et1.getEditableText().toString();
             if (!str.isEmpty()) {
-                HttpConnector httpConnector = new HttpConnector("ingroup", "{\"user_id\":\"" + myId + "\",\"group_id\":\"" + str + "\"}");
-                httpConnector.setOnHttpResponseListener((String message) -> {
-                    if (Integer.parseInt(message) == 0) {
-                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                        adb.setCancelable(true);
-                        adb.setTitle("グループ加入完了");
-                        adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
-                        adb.setPositiveButton("OK", null);
-                        AlertDialog ad = adb.create();
-                        ad.show();
-                        listLoad();
+                Wait("グループ検索");
+
+                HttpConnector httpConnector = new HttpConnector("getgroup", "{\"user_id\":\"" + myId + "\"}");
+                httpConnector.setOnHttpResponseListener((String jsonData) -> {
+
+                    if (!jsonData.equals("notfound")) {
+                        waitDialog.dismiss();
+                        try {
+                            JSONObject json = new JSONObject(jsonData);
+                            JSONArray data = json.getJSONArray("data");
+                            boolean flag = true;
+                            for (int i = 0; i != data.length(); i++) {
+
+                                JSONObject object = data.getJSONObject(i);
+                                if (object.getString("group_id").equals(str)) {
+                                    flag = false;
+                                }
+                            }
+                            if (flag) {
+                                HttpConnector httpCon = new HttpConnector("ingroup", "{\"user_id\":\"" + myId + "\",\"group_id\":\"" + str + "\"}");
+                                httpCon.setOnHttpResponseListener((String message) -> {
+                                    if (Integer.parseInt(message) == 0) {
+                                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                                        adb.setCancelable(true);
+                                        adb.setTitle("グループ加入完了");
+                                        adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
+                                        adb.setPositiveButton("OK", null);
+                                        AlertDialog ad = adb.create();
+                                        ad.show();
+                                        listLoad();
+                                    } else {
+                                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                                        adb.setCancelable(true);
+                                        adb.setTitle("エラー");
+                                        adb.setMessage("グループが見つかりませんでした。グループIDを確認してもう一度お試しください。");
+                                        adb.setPositiveButton("OK", null);
+                                        AlertDialog ad = adb.create();
+                                        ad.show();
+                                    }
+                                });
+                                httpCon.setOnHttpErrorListener((int error) -> {
+                                    android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+                                    adb.setTitle("接続エラー");
+                                    adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                                    adb.setPositiveButton("OK", null);
+                                    adb.setCancelable(true);
+                                    adb.show();
+                                });
+                                httpCon.post();
+                            } else {
+                                AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                                adb.setCancelable(true);
+                                adb.setTitle("エラー");
+                                adb.setMessage("すでに加入しています。グループIDを確認してもう一度お試しください。");
+                                adb.setPositiveButton("OK", null);
+                                AlertDialog ad = adb.create();
+                                ad.show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
-                        adb.setCancelable(true);
-                        adb.setTitle("エラー");
-                        adb.setMessage("エラーが発生しました。グループIDを確認してもう一度お試しください。");
-                        adb.setPositiveButton("OK", null);
-                        AlertDialog ad = adb.create();
-                        ad.show();
+                        waitDialog.dismiss();
+                        HttpConnector httpCon = new HttpConnector("ingroup", "{\"user_id\":\"" + myId + "\",\"group_id\":\"" + str + "\"}");
+                        httpCon.setOnHttpResponseListener((String message) -> {
+                            if (Integer.parseInt(message) == 0) {
+                                AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                                adb.setCancelable(true);
+                                adb.setTitle("グループ加入完了");
+                                adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
+                                adb.setPositiveButton("OK", null);
+                                AlertDialog ad = adb.create();
+                                ad.show();
+                                listLoad();
+                            } else {
+                                AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
+                                adb.setCancelable(true);
+                                adb.setTitle("エラー");
+                                adb.setMessage("グループが見つかりませんでした。グループIDを確認してもう一度お試しください。");
+                                adb.setPositiveButton("OK", null);
+                                AlertDialog ad = adb.create();
+                                ad.show();
+                            }
+                        });
+                        httpCon.setOnHttpErrorListener((int error) -> {
+                            android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);
+                            adb.setTitle("接続エラー");
+                            adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
+                            adb.setPositiveButton("OK", null);
+                            adb.setCancelable(true);
+                            adb.show();
+                        });
+                        httpCon.post();
                     }
+
+
                 });
                 httpConnector.setOnHttpErrorListener((int error) -> {
                     android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(SelectGroupActivity.this);

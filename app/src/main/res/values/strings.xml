@@ -3,7 +3,8 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_maps">Map</string>
-    <string name="title_activity_select_group">SelectGroupActivity</string>
-    <string name="title_activity_wait_member">WaitMemberActivity</string>
+    <string name="title_activity_maps">集まれ！</string>
+    <string name="title_activity_select_group">グループ選択</string>
+    <string name="title_activity_wait_member">メンバー待ち</string>
+    <string name="title_activity_signin">会員登録</string>
 </resources>

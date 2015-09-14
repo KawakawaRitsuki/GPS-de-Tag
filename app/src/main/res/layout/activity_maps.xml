@@ -23,7 +23,10 @@
                 android:text="ログアウト"
                 android:id="@+id/button"
                 android:onClick="onClick"
-                android:layout_gravity="left|top" />
+                android:layout_gravity="left|top"
+                android:background="@drawable/button"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp" />
 
         </FrameLayout>
 

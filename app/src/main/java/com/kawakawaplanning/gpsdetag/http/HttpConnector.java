@@ -16,7 +16,7 @@ import java.net.URLConnection;
  */
 public class HttpConnector {
 
-    String host = "http://192.168.11.2:8080/";
+    String host = "http://kawakawaritsuki.dip.jp:8080/";
     String message = "";
     private OnHttpResponseListener resLis = null;
     private OnHttpErrorListener errLis = null;
@@ -86,16 +86,22 @@ public class HttpConnector {
                 while ((s = reader.readLine()) != null) {
                     sb.append(s);
                 }
-                handler.post(() -> {
-                    if (resLis != null)
-                        resLis.onResponse(sb.toString());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (resLis != null)
+                            resLis.onResponse(sb.toString());
+                    }
                 });
                 reader.close();
 
             } catch (IOException e) {
-                handler.post(() -> {
-                    if (errLis != null)
-                        errLis.onError(0);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (errLis != null)
+                            errLis.onError(0);
+                    }
                 });
             }
         }).start();

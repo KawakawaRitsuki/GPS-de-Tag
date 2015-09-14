@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
+import android.view.KeyEvent;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -63,7 +64,15 @@ public class WaitMemberActivity extends ActionBarActivity {
 
     }
 
-
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_BACK){
+            startActivity(new Intent(getApplicationContext(),SelectGroupActivity.class));
+            finish();
+            return true;
+        }
+        return false;
+    }
 
     @Override
     protected void onStart() {
@@ -94,6 +103,7 @@ public class WaitMemberActivity extends ActionBarActivity {
             httpConnector.post();
         }
     }
+
 
     public void loginCheck(String groupId){
         HttpConnector httpConnector = new HttpConnector("loginstate","{\"group_id\":\"" + groupId + "\"}");

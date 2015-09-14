@@ -22,7 +22,7 @@
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
-            android:value="@string/google_maps_key" />
+            android:value="AIzaSyBKQg1X3BepUE4czgVm22k2VvYVnBVJiWE" />
 
         <activity
             android:name=".MainActivity"
@@ -51,6 +51,11 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+
+        <activity
+            android:name=".SignUpActivity"
+            android:label="@string/title_activity_signin" >
+        </activity>
     </application>
 
 </manifest>

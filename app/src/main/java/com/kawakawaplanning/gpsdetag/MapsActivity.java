@@ -71,6 +71,7 @@ public class MapsActivity extends FragmentActivity {
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
+
     }
 
     public void onClick(View v) {
@@ -85,12 +86,14 @@ public class MapsActivity extends FragmentActivity {
                     SharedPreferences.Editor editor = mPref.edit();
                     editor.putBoolean("loginnow", false);
                     editor.apply();
+                    stopService(new Intent(this, SendService.class));
                     finish();
                 } else {
                     SharedPreferences.Editor editor = mPref.edit();
                     editor.putBoolean("loginnow", false);
                     editor.apply();
                     Toast.makeText(MapsActivity.this, "サーバーエラーが発生しました。強制的に終了しました。", Toast.LENGTH_SHORT).show();
+                    stopService(new Intent(this, SendService.class));
                     finish();
                 }
             });
@@ -163,14 +166,6 @@ public class MapsActivity extends FragmentActivity {
                 }
 
             });
-            httpConnector.setOnHttpErrorListener((int error) -> {
-                android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(MapsActivity.this);
-                adb.setTitle("接続エラー");
-                adb.setMessage("接続エラーが発生しました。インターネットの接続状態を確認して下さい。");
-                adb.setPositiveButton("OK", null);
-                adb.setCancelable(true);
-                adb.show();
-            });
             httpConnector.post();
         });
 
@@ -209,10 +204,10 @@ public class MapsActivity extends FragmentActivity {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
             builder.setContentIntent(contentIntent);
-            builder.setTicker("GPS de 鬼ごっこは実行中です");
+            builder.setTicker("集まれ！は実行中です");
             builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
-            builder.setContentTitle("GPS de 鬼ごっこ");
-            builder.setContentText("GPS鬼ごっこは実行中です。マップを表示。");
+            builder.setContentTitle("集まれ！");
+            builder.setContentText("集まれ！は実行中です。マップを表示。");
             builder.setOngoing(true);
             builder.setWhen(System.currentTimeMillis());
 

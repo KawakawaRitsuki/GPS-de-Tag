@@ -3,20 +3,16 @@ package com.kawakawaplanning.gpsdetag;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 
@@ -38,15 +34,25 @@ public class MainActivity extends ActionBarActivity {
 
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
 
-        if(pref.getBoolean("loginnow",false)){
+        if(pref.getBoolean("loginnow",false)) {
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
             startActivity(intent);
             finish();
+        }else{
+            autoLogin();
         }
 
         findView();
-        autoLogin();
+
+
+        mPwEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
+            if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                login();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void findView(){
@@ -73,13 +79,13 @@ public class MainActivity extends ActionBarActivity {
         if(pref.getBoolean("AutoLogin", false)){
             Wait("自動ログイン");
 
-            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+pref.getString("username", "")+"\",\"password\":\""+pref.getString("password", "")+"\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 Log.v("tag", message);
                 waitDialog.dismiss();
                 if (Integer.parseInt(message) == 0) {
                     editor = pref.edit();
-                    editor.putString("loginid", mIdEt.getText().toString());
+                    editor.putString("loginid", pref.getString("username", ""));
                     editor.apply();
                     Intent intent = new Intent();
                     intent.setClass(MainActivity.this, SelectGroupActivity.class);
@@ -91,6 +97,7 @@ public class MainActivity extends ActionBarActivity {
 
             });
             httpConnector.setOnHttpErrorListener((int error) -> {
+                if(waitDialog != null)
                 waitDialog.dismiss();
                 android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
                 adb.setTitle("接続エラー");
@@ -111,7 +118,7 @@ public class MainActivity extends ActionBarActivity {
         }else{
             Wait("ログイン");
 
-            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"user_name\":\"文字列\",\"password\":\""+mPwEt.getText().toString()+"\"}");
+            HttpConnector httpConnector = new HttpConnector("login","{\"user_id\":\""+mIdEt.getText().toString()+"\",\"password\":\""+mPwEt.getText().toString()+"\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
                 Log.v("tag", message);
                 waitDialog.dismiss();
@@ -151,52 +158,9 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void signUp(){
-
-        if( mIdEt.getText().toString().length() <= 3 && mPwEt.getText().toString().length() <= 5){
-            alert("入力エラー","IDは4文字以上・PWは6文字以上にしてください。");
-        } else {
-
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            LayoutInflater inflater = (LayoutInflater) this.getSystemService(
-                    LAYOUT_INFLATER_SERVICE);
-            View view = inflater.inflate(R.layout.dialog_et1,
-                    (ViewGroup) findViewById(R.id.dialog_layout));
-
-            final EditText et1 = (EditText) view.findViewById(R.id.editText1);
-            final TextView tv1 = (TextView) view.findViewById(R.id.dig_tv1);
-
-            tv1.setText("ニックネームを設定します。設定したいニックネームを入力してください！");
-
-            alertDialogBuilder.setTitle("ニックネーム設定");
-            alertDialogBuilder.setView(view);
-            alertDialogBuilder.setPositiveButton("OK", null);
-            alertDialogBuilder.setCancelable(true);
-            final AlertDialog alertDialog = alertDialogBuilder.create();
-            alertDialog.show();
-
-            Button buttonOK = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-            buttonOK.setOnClickListener((View v1) -> {
-                final String str = et1.getEditableText().toString();
-                if (str.length() != 0) {
-                    HttpConnector httpConnector = new HttpConnector("signup", "{\"user_id\":\"" + mIdEt.getText().toString() + "\",\"user_name\":\"文字列\",\"password\":\"" + mPwEt.getText().toString() + "\",\"user_name\":\"" + str +"\"}");
-                    httpConnector.setOnHttpResponseListener((String message) -> {
-                        Log.v("tag", message);
-
-                        if (Integer.parseInt(message) == 0) {
-                            alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して鬼ごっこをしよう！");
-                        } else {
-                            alert("ログインエラー", "IDが重複しています。もう一度試してください。エラーコード:1");
-                        }
-                        alertDialog.dismiss();
-                    });
-                    httpConnector.post();
-                } else {
-                    et1.setError("ニックネームを入力してください");
-                }
-
-            });
-
-        }
+        Intent intent = new Intent();
+        intent.setClass(MainActivity.this, SignUpActivity.class);
+        startActivity(intent);
     }
 
     private void Wait(String what){
