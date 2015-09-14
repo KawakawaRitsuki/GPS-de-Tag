@@ -7,8 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
-import android.view.KeyEvent;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -26,7 +25,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-public class WaitMemberActivity extends ActionBarActivity {
+public class WaitMemberActivity extends AppCompatActivity {
     
     private String myId;
     private String groupId;
@@ -62,16 +61,6 @@ public class WaitMemberActivity extends ActionBarActivity {
         });
         httpConnector.post();
 
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode==KeyEvent.KEYCODE_BACK){
-            startActivity(new Intent(getApplicationContext(),SelectGroupActivity.class));
-            finish();
-            return true;
-        }
-        return false;
     }
 
     @Override

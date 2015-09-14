@@ -24,9 +24,6 @@ public class SendService extends Service implements LocationListener {
     static public String groupId;
     static public String mem[];
 
-    int chatNum = 0;
-
-
     @Override
     public void onCreate() {
 

@@ -5,7 +5,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -19,7 +19,7 @@ import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 import java.util.regex.Pattern;
 
 
-public class SignUpActivity extends ActionBarActivity {
+public class SignUpActivity extends AppCompatActivity {
 
     Pattern p;
     private ProgressDialog waitDialog;
@@ -121,7 +121,10 @@ public class SignUpActivity extends ActionBarActivity {
             }
             return false;
         });
+
     }
+
+
 
     EditText idEt;
     EditText pwEt;

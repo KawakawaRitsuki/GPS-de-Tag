@@ -7,9 +7,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class SelectGroupActivity extends ActionBarActivity {
+public class SelectGroupActivity extends AppCompatActivity {
 
 
     private String myId;
@@ -50,6 +52,19 @@ public class SelectGroupActivity extends ActionBarActivity {
         myId = pref.getString("loginid", "");
         mHandler = new Handler();
 
+        keyEventTimer = new CountDownTimer(1000, 100) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+            @Override
+            public void onFinish() {
+                logout(null);
+                pressed = false;
+            }
+        };
+
         findView();
         listLoad();
     }
@@ -61,7 +76,6 @@ public class SelectGroupActivity extends ActionBarActivity {
         editor.putBoolean("AutoLogin", false);
         editor.apply();
 
-        startActivity(new Intent(this,MainActivity.class));
         finish();
     }
 
@@ -111,6 +125,33 @@ public class SelectGroupActivity extends ActionBarActivity {
             adb.show();
         });
         httpConnector.post();
+    }
+    // BackボタンPress時の有効タイマー
+    private CountDownTimer keyEventTimer;
+
+    // 一度目のBackボタンが押されたかどうかを判定するフラグ
+    private boolean pressed = false;
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+
+        // Backボタン検知
+        if(event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if(!pressed) {
+                // Timerを開始
+                keyEventTimer.cancel(); // いらない?
+                keyEventTimer.start();
+
+                // 終了する場合, もう一度タップするようにメッセージを出力する
+                Toast.makeText(this, "終了する場合は、もう一度バックボタンを押してください", Toast.LENGTH_SHORT).show();
+                pressed = true;
+                return false;
+            }
+
+            // pressed=trueの時、通常のBackボタンで終了処理.
+            return super.dispatchKeyEvent(event);
+        }
+        // Backボタンに関わらないボタンが押された場合は、通常処理.
+        return super.dispatchKeyEvent(event);
     }
 
 

@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -16,7 +16,7 @@ import android.widget.EditText;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     private EditText mIdEt;
     private EditText mPwEt;
@@ -38,7 +38,7 @@ public class MainActivity extends ActionBarActivity {
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
             startActivity(intent);
-            finish();
+//            finish();
         }else{
             autoLogin();
         }
@@ -90,7 +90,7 @@ public class MainActivity extends ActionBarActivity {
                     Intent intent = new Intent();
                     intent.setClass(MainActivity.this, SelectGroupActivity.class);
                     startActivity(intent);
-                    finish();
+//                    finish();
                 } else {
                     alert("ログインエラー", "IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
                 }
@@ -137,7 +137,7 @@ public class MainActivity extends ActionBarActivity {
                         editor.putBoolean("AutoLogin", true);
                         editor.apply();
                     }
-                    finish();
+//                    finish();
                 }else{
                     alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
                 }
