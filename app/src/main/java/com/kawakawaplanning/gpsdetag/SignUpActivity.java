@@ -181,14 +181,9 @@ public class SignUpActivity extends AppCompatActivity {
                 waitDialog.dismiss();
                 Log.v("tag", message);
                 if (Integer.parseInt(message) == 0) {
-                    alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して始めよう！", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    });
+                    alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して始めよう！", null);
                 } else {
-                    alert("ログインエラー", "IDが重複しています。もう一度試してください。エラーコード:1",null);
+                    alert("エラー", "このIDは既に使用されています。エラーコード:1",null);
                 }
             });
             httpConnector.setOnHttpErrorListener((int error) -> {

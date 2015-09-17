@@ -24,7 +24,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ユーザーID(ログインID)"
+                android:text="ユーザーID\n(ログインID)"
                 android:layout_weight="1" />
 
             <TextView
@@ -70,7 +70,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="パスワード(再入力)"
+                android:text="パスワード\n(再入力)"
                 android:layout_weight="1"/>
 
             <TextView
@@ -93,7 +93,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ニックネーム(相手にも見える名前)"
+                android:text="ニックネーム\n(相手にも見える名前)"
                 android:layout_weight="1" />
 
             <TextView

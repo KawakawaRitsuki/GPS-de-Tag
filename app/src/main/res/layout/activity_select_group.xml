@@ -17,8 +17,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="ログインしたいグループを選択してください"
-            android:layout_weight="1" />
+            android:text="グループを選択してください"
+            android:layout_weight="1"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -45,7 +45,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="グループを作る"
+            android:text="グループを作成"
             android:id="@+id/button2"
             android:layout_gravity="center_horizontal"
             android:layout_weight="1"

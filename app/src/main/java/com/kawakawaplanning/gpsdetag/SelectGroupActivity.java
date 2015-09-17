@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -22,6 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
+import com.kawakawaplanning.gpsdetag.list.CustomAdapter;
+import com.kawakawaplanning.gpsdetag.list.CustomData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,13 +35,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class SelectGroupActivity extends AppCompatActivity {
 
 
     private String myId;
-    private ListView lv;
+    private String groupId;
+    private ListView mSelectLv;
+    private ListView mWaitLv;
     private ProgressDialog waitDialog;
     private Handler mHandler;
     SharedPreferences pref;
@@ -47,41 +55,39 @@ public class SelectGroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
-        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
+        pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
         myId = pref.getString("loginid", "");
         mHandler = new Handler();
-        setScreenContent(R.layout.activity_select_group);
-        keyEventTimer = new CountDownTimer(1000, 100) {
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-            }
-
-            @Override
-            public void onFinish() {
-
-                pressed = false;
-            }
-        };
-
 
     }
 
-    public void logout(View v){
-        SharedPreferences.Editor editor = pref.edit();
-        editor.putString("username", "");
-        editor.putString("password", "");
-        editor.putBoolean("AutoLogin", false);
-        editor.apply();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setScreenContent(R.layout.activity_select_group);
+    }
 
-        finish();
+    public void logout(View v){
+        android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(this);
+        adb.setTitle("確認");
+        adb.setMessage("ログアウトしますか？");
+        adb.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("username", "");
+            editor.putString("password", "");
+            editor.putBoolean("AutoLogin", false);
+            editor.apply();
+            finish();
+        });
+        adb.setNegativeButton("Cancel", null);
+        adb.show();
     }
 
     List<Map<String, String>> list;
 
     private void listLoad() {
         Wait("グループ読み込み");
-        list = new ArrayList();
+        list = new ArrayList<>();
 
         HttpConnector httpConnector = new HttpConnector("getgroup", "{\"user_id\":\"" + myId + "\"}");
         httpConnector.setOnHttpResponseListener((String message) -> {
@@ -104,9 +110,9 @@ public class SelectGroupActivity extends AppCompatActivity {
             }
             mHandler.post(() -> {
                 SimpleAdapter adapter = new SimpleAdapter(SelectGroupActivity.this, list, android.R.layout.simple_list_item_2, new String[]{"Name", "Member"}, new int[]{android.R.id.text1, android.R.id.text2});
-                lv.setAdapter(adapter);
-                lv.setOnItemClickListener(onItem);
-                lv.setOnItemLongClickListener(onItemLong);
+                mSelectLv.setAdapter(adapter);
+                mSelectLv.setOnItemClickListener(onItem);
+                mSelectLv.setOnItemLongClickListener(onItemLong);
             });
         });
         httpConnector.setOnHttpErrorListener((int error) -> {
@@ -121,36 +127,27 @@ public class SelectGroupActivity extends AppCompatActivity {
         httpConnector.post();
     }
 
-    private CountDownTimer keyEventTimer;
-    private boolean pressed = false;
-
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
+    public boolean dispatchKeyEvent( KeyEvent event) {
 
         if(event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
 
             switch(mScreenId){
                 case R.layout.activity_select_group:
-                    if(!pressed) {
-                        keyEventTimer.cancel();
-                        keyEventTimer.start();
-                        Toast.makeText(this, "終了する場合は、もう一度バックボタンを押してください", Toast.LENGTH_SHORT).show();
-                        pressed = true;
-                        return false;
-                    }
-                    SharedPreferences.Editor editor = pref.edit();
-                    editor.putString("username", "");
-                    editor.putString("password", "");
-                    editor.putBoolean("AutoLogin", false);
-                    editor.apply();
+                    logout(null);
                     break;
                 case R.layout.activity_member_wait:
+                    HttpConnector httpConnector = new HttpConnector("grouplogin", "{\"user_id\":\"" + myId + "\",\"group_id\":\"\"}");
+                    httpConnector.setOnHttpResponseListener((String message) -> {
+                        if (Integer.parseInt(message) == 1) {
+                            Toast.makeText(SelectGroupActivity.this, "サーバーエラーが発生しました。時間を開けてお試しください。", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    httpConnector.post();
+                    mTimer.cancel();
                     setScreenContent(R.layout.activity_select_group);
                     break;
             }
-
-
-
             return super.dispatchKeyEvent(event);
         }
         return super.dispatchKeyEvent(event);
@@ -159,13 +156,8 @@ public class SelectGroupActivity extends AppCompatActivity {
 
 
     private AdapterView.OnItemClickListener onItem = (AdapterView<?> parent, View view, int position, long id) -> {
-            Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
-
-            SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
-            SharedPreferences.Editor editor = pref.edit();
-            editor.putString("groupId", map.get("Member").substring(7));
-            editor.apply();
-
+        Map<String, String> map = (Map<String, String>) parent.getAdapter().getItem(position);
+        groupId = map.get("Member").substring(7);
         setScreenContent(R.layout.activity_member_wait);
     };
 
@@ -222,7 +214,7 @@ public class SelectGroupActivity extends AppCompatActivity {
         final EditText et1 = (EditText)view.findViewById(R.id.editText1);
         final TextView tv1 = (TextView)view.findViewById(R.id.dig_tv1);
 
-        tv1.setText("作成するグループ名を入力してください");
+        tv1.setText("作成するグループ名を入力してください。");
 
         alertDialogBuilder.setTitle("グループ作成");
         alertDialogBuilder.setView(view);
@@ -266,9 +258,9 @@ public class SelectGroupActivity extends AppCompatActivity {
         final EditText et1 = (EditText)view.findViewById(R.id.editText1);
         final TextView tv1 = (TextView)view.findViewById(R.id.dig_tv1);
 
-        tv1.setText("ログインしたいグループIDを入力してください");
+        tv1.setText("参加したいグループIDを入力してください。");
 
-        alertDialogBuilder.setTitle("グループログイン");
+        alertDialogBuilder.setTitle("グループ参加");
         alertDialogBuilder.setView(view);
         alertDialogBuilder.setPositiveButton("OK", null);
         alertDialogBuilder.setCancelable(true);
@@ -300,8 +292,8 @@ public class SelectGroupActivity extends AppCompatActivity {
                                     if (Integer.parseInt(message) == 0) {
                                         AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                                         adb.setCancelable(true);
-                                        adb.setTitle("グループ加入完了");
-                                        adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
+                                        adb.setTitle("グループ参加");
+                                        adb.setMessage("グループに参加しました。さっそくグループを選択して遊ぼう！");
                                         adb.setPositiveButton("OK", null);
                                         AlertDialog ad = adb.create();
                                         ad.show();
@@ -329,7 +321,7 @@ public class SelectGroupActivity extends AppCompatActivity {
                                 AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                                 adb.setCancelable(true);
                                 adb.setTitle("エラー");
-                                adb.setMessage("すでに加入しています。グループIDを確認してもう一度お試しください。");
+                                adb.setMessage("すでに参加しています。グループIDを確認してもう一度お試しください。");
                                 adb.setPositiveButton("OK", null);
                                 AlertDialog ad = adb.create();
                                 ad.show();
@@ -344,8 +336,8 @@ public class SelectGroupActivity extends AppCompatActivity {
                             if (Integer.parseInt(message) == 0) {
                                 AlertDialog.Builder adb = new AlertDialog.Builder(SelectGroupActivity.this);
                                 adb.setCancelable(true);
-                                adb.setTitle("グループ加入完了");
-                                adb.setMessage("グループへの加入が完了しました。さっそくグループを選択して遊ぼう！");
+                                adb.setTitle("グループ参加");
+                                adb.setMessage("グループに参加しました。さっそくグループを選択して遊ぼう！");
                                 adb.setPositiveButton("OK", null);
                                 AlertDialog ad = adb.create();
                                 ad.show();
@@ -414,12 +406,125 @@ public class SelectGroupActivity extends AppCompatActivity {
     }
 
     private void setSelectScreenContent() {
-        lv = (ListView)findViewById(R.id.listView2);
+        mSelectLv = (ListView)findViewById(R.id.listView2);
         listLoad();
     }
 
+    private Timer mTimer;
+    CustomAdapter customAdapter;
     private void setWaitScreenContent() {
+        mWaitLv = (ListView)findViewById(R.id.listView);
+        objects = new ArrayList<>();
 
+        mWaitLv.setAdapter(customAdapter);
+
+        mHandler.post(() -> firstCheck(groupId));
+
+        mTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            public void run() {
+                mHandler.post(() -> loginCheck(groupId));
+            }
+        };
+        mTimer.schedule(task, 1000, 1000);
+
+
+
+        HttpConnector httpConnector = new HttpConnector("grouplogin","{\"user_id\":\""+myId+"\",\"group_id\":\""+groupId+"\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            if (Integer.parseInt(message) == 1) {
+                Toast.makeText(SelectGroupActivity.this, "サーバーエラーが発生しました。時間を開けてお試しください。", Toast.LENGTH_SHORT).show();
+            }
+        });
+        httpConnector.post();
+    }
+    List<CustomData> objects;
+    public void firstCheck(String groupId){
+        HttpConnector httpConnector = new HttpConnector("loginstate","{\"group_id\":\"" + groupId + "\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            Bitmap successImage = BitmapFactory.decodeResource(getResources(), R.drawable.success);
+            Bitmap errorImage = BitmapFactory.decodeResource(getResources(), R.drawable.error);
+
+
+
+            try {
+                JSONObject json = new JSONObject(message);
+                JSONArray data = json.getJSONArray("data");
+
+                Boolean flag = true;
+                for (int i = 0; i != data.length(); i++) {
+
+                    JSONObject object = data.getJSONObject(i);
+                    CustomData item = new CustomData();
+                    if(object.getString("login_now").equals(groupId)) {
+                        item.setImagaData(successImage);
+                    } else {
+                        item.setImagaData(errorImage);
+                        flag=false;
+                    }
+
+                    item.setTextData(object.getString("user_name") + "(" + object.getString("user_id") + ")");
+                    objects.add(item);
+                }
+                if(flag) {
+                    Intent intent = new Intent();
+                    intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
+                    pref.edit().putString("groupId",groupId).apply();
+                    startActivity(intent);
+                    mTimer.cancel();
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            customAdapter = new CustomAdapter(this,0,objects);
+            mWaitLv.setAdapter(customAdapter);
+
+        });
+        httpConnector.post();
+    }
+
+    public void loginCheck(String groupId){
+        HttpConnector httpConnector = new HttpConnector("loginstate","{\"group_id\":\"" + groupId + "\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            Bitmap successImage = BitmapFactory.decodeResource(getResources(), R.drawable.success);
+            Bitmap errorImage = BitmapFactory.decodeResource(getResources(), R.drawable.error);
+
+
+            try {
+                JSONObject json = new JSONObject(message);
+                JSONArray data = json.getJSONArray("data");
+
+                Boolean flag = true;
+                for (int i = 0; i != data.length(); i++) {
+
+                    JSONObject object = data.getJSONObject(i);
+                    CustomData cd = customAdapter.getItem(i);
+                    if(object.getString("login_now").equals(groupId)) {
+                        cd.setImagaData(successImage);
+
+                    } else {
+                        cd.setImagaData(errorImage);
+                        flag=false;
+                    }
+
+                    objects.set(i, cd);
+                }
+                if(flag) {
+                    Intent intent = new Intent();
+                    intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
+                    pref.edit().putString("groupId",groupId).apply();
+                    startActivity(intent);
+                    mTimer.cancel();
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            customAdapter.notifyDataSetChanged();
+
+        });
+        httpConnector.post();
     }
 
 }

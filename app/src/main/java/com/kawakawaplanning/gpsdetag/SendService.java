@@ -78,6 +78,5 @@ public class SendService extends Service implements LocationListener {
         }
     }
 
-    public static String chatTxt;
 
 }

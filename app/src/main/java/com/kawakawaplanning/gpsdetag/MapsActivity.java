@@ -15,6 +15,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -71,13 +72,12 @@ public class MapsActivity extends FragmentActivity {
         if(!isServiceRunning(this,SendService.class))
             startService(new Intent(this, SendService.class));
 
-
     }
 
     public void onClick(View v) {
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setTitle("確認");
-        adb.setMessage("本当にログアウトしますか？");
+        adb.setMessage("終了しますか？");
         adb.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             finish = true;
             HttpConnector httpConnector = new HttpConnector("grouplogout", "{\"user_id\":\"" + mMyId + "\"}");
@@ -112,8 +112,19 @@ public class MapsActivity extends FragmentActivity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+
+        if(event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            onClick(null);
+            return super.dispatchKeyEvent(event);
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+
         mTimer = new Timer();
         mTimer.schedule(
                 new TimerTask() {
@@ -200,7 +211,7 @@ public class MapsActivity extends FragmentActivity {
         if(!finish) {
             Intent _intent = new Intent(this, MapsActivity.class);
             _intent.putExtra("name", mMyId);
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 510, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
             builder.setContentIntent(contentIntent);
@@ -210,7 +221,6 @@ public class MapsActivity extends FragmentActivity {
             builder.setContentText("集まれ！は実行中です。マップを表示。");
             builder.setOngoing(true);
             builder.setWhen(System.currentTimeMillis());
-
 
             int nId = R.string.app_name;
             mNm.notify(nId, builder.build());

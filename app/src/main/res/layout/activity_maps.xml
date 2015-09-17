@@ -20,7 +20,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ログアウト"
+                android:text="終了"
                 android:id="@+id/button"
                 android:onClick="onClick"
                 android:layout_gravity="left|top"

@@ -23,7 +23,6 @@ public class MainActivity extends AppCompatActivity {
     private CheckBox mCheckBox;
     private Vibrator mVib;
     private ProgressDialog waitDialog;
-    private AlertDialog ad;
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
 
@@ -44,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         findView();
-
 
         mPwEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
             if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
@@ -175,8 +173,7 @@ public class MainActivity extends AppCompatActivity {
         adb.setTitle(til);
         adb.setMessage(msg);
         adb.setPositiveButton("OK", null);
-        ad = adb.create();
-        ad.show();
+        adb.show();
     }
 
 }
