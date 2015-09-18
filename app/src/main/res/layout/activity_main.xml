@@ -74,16 +74,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
-            android:background="@drawable/button"
             android:onClick="onClick"
             android:text="ログイン"
             android:textColor="@color/brown"/>
     </LinearLayout>
-
-    <ImageView
-        android:layout_width="159dp"
-        android:layout_height="128dp"
-        android:id="@+id/imageView"
-        android:src="@drawable/bee" />
 
 </LinearLayout>
