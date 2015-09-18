@@ -34,14 +34,14 @@
 		android:shape="rectangle">
 		<gradient
 		android:angle="270"
-		android:startColor="#79bbff"
-		android:endColor="#4197ee"
+		android:startColor="#ffffffe0"
+		android:endColor="#fffff17a"
 		android:type="linear" />
 		<corners
 			android:radius="4dip" />
 		<stroke
 			android:width="1dip"
-			android:color="#469df5"/>
+			android:color="#fff5e900"/>
     </shape>
 	</item>
 </layer-list>

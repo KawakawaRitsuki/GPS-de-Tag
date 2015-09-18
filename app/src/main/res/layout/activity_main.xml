@@ -12,14 +12,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ユーザーID"
-        android:textColor="#79bbff" />
+        android:textColor="@color/brown" />
 
     <EditText
         android:id="@+id/idedit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="text">
+        android:inputType="text"
+        android:textColor="@color/brown">
 
         <requestFocus />
     </EditText>
@@ -29,14 +30,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="パスワード"
-        android:textColor="#79bbff" />
+        android:textColor="@color/brown" />
 
     <EditText
         android:id="@+id/pwedit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="text|textPassword"/>
+        android:inputType="text|textPassword"
+        android:textColor="@color/brown"/>
 
     <CheckBox
         android:id="@+id/checkBox1"
@@ -45,7 +47,7 @@
         android:layout_gravity="right"
         android:checked="false"
         android:text="自動ログイン"
-        android:textColor="#79bbff" />
+        android:textColor="@color/brown" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -59,7 +61,8 @@
             android:layout_height="wrap_content"
             android:background="@drawable/button"
             android:onClick="onClick"
-            android:text="新規会員登録" />
+            android:text="新規会員登録"
+            android:textColor="@color/brown"/>
 
         <Space
             android:layout_width="wrap_content"
@@ -73,22 +76,14 @@
             android:layout_gravity="right"
             android:background="@drawable/button"
             android:onClick="onClick"
-            android:text="ログイン" />
+            android:text="ログイン"
+            android:textColor="@color/brown"/>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="このアプリについて"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="#79bbff" />
-
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="このアプリは、友達と位置を教えあうアプリです！"
-        android:textColor="#79bbff" />
+    <ImageView
+        android:layout_width="159dp"
+        android:layout_height="128dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/bee" />
 
 </LinearLayout>

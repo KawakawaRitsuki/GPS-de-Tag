@@ -216,7 +216,7 @@ public class MapsActivity extends FragmentActivity {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
             builder.setContentIntent(contentIntent);
             builder.setTicker("集まれ！は実行中です");
-            builder.setSmallIcon(R.mipmap.ic_launcher);//アイコン
+            builder.setSmallIcon(R.drawable.ic_stat_name);//アイコン
             builder.setContentTitle("集まれ！");
             builder.setContentText("集まれ！は実行中です。マップを表示。");
             builder.setOngoing(true);

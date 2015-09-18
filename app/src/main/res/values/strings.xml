@@ -7,4 +7,5 @@
     <string name="title_activity_select_group">グループ選択</string>
     <string name="title_activity_wait_member">メンバー待ち</string>
     <string name="title_activity_signin">会員登録</string>
+    <string name="title_activity_splash">SplashActivity</string>
 </resources>
