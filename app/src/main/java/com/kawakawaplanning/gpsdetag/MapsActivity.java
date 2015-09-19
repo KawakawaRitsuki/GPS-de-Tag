@@ -48,13 +48,17 @@ public class MapsActivity extends FragmentActivity {
     Timer mTimer;
     private NotificationManager mNm;
     SharedPreferences mPref;
+    HashMap<String,Integer> mMap;
 
     boolean finish = false;
+    boolean first = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        mMap = new HashMap<>();
 
         mPref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
         mMyId = mPref.getString("loginid", "");
@@ -170,7 +174,15 @@ public class MapsActivity extends FragmentActivity {
                     for (int i = 0; i != data.length(); i++) {
                         JSONObject object = data.getJSONObject(i);
                         setMarker(i, object.getString("user_name"), object.getDouble("latitude"), object.getDouble("longitude"));
+                        if(!first && mMap.get(object.getString("user_name")) != object.getInt("login")){
+                            if(object.getInt("login") == 1)
+                                Toast.makeText(MapsActivity.this,object.getString("user_name") + "さんがログアウトしました",Toast.LENGTH_SHORT).show();
+                            else
+                                Toast.makeText(MapsActivity.this,object.getString("user_name") + "さんがログインしました",Toast.LENGTH_SHORT).show();
+                        }
+                        mMap.put(object.getString("user_name"), object.getInt("login"));
                     }
+                    first = false;
 
                 } catch (JSONException e) {
                     e.printStackTrace();

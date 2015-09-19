@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent();
             intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
             startActivity(intent);
-//            finish();
         }else{
             autoLogin();
         }
@@ -88,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent();
                     intent.setClass(MainActivity.this, SelectGroupActivity.class);
                     startActivity(intent);
-//                    finish();
                 } else {
                     alert("ログインエラー", "IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
                 }
@@ -135,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
                         editor.putBoolean("AutoLogin", true);
                         editor.apply();
                     }
-//                    finish();
                 }else{
                     alert("ログインエラー","IDまたはパスワードが違います。もう一度試してください。エラーコード:1");
                 }
