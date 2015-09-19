@@ -404,21 +404,18 @@ public class SelectGroupActivity extends AppCompatActivity {
     CustomAdapter customAdapter;
     private void setWaitScreenContent() {
         mWaitLv = (ListView)findViewById(R.id.listView);
+
         objects = new ArrayList<>();
+
+        if(customAdapter != null) {
+            customAdapter.clear();
+            customAdapter.notifyDataSetChanged();
+        }
 
         mWaitLv.setAdapter(customAdapter);
 
         mHandler.post(() -> firstCheck(groupId));
-
         mTimer = new Timer();
-        TimerTask task = new TimerTask() {
-            public void run() {
-                mHandler.post(() -> loginCheck(groupId));
-            }
-        };
-        mTimer.schedule(task, 1000, 1000);
-
-
 
         HttpConnector httpConnector = new HttpConnector("grouplogin","{\"user_id\":\""+myId+"\",\"group_id\":\""+groupId+"\"}");
         httpConnector.setOnHttpResponseListener((String message) -> {
@@ -446,7 +443,7 @@ public class SelectGroupActivity extends AppCompatActivity {
 
                     JSONObject object = data.getJSONObject(i);
                     CustomData item = new CustomData();
-                    if(object.getString("login_now").equals(groupId)) {
+                    if(object.getString("login_now").equals(groupId) || object.getString("user_id").equals(myId)) {
                         item.setImagaData(successImage);
                     } else {
                         item.setImagaData(errorImage);
@@ -456,19 +453,25 @@ public class SelectGroupActivity extends AppCompatActivity {
                     item.setTextData(object.getString("user_name") + "(" + object.getString("user_id") + ")");
                     objects.add(item);
                 }
+                customAdapter = new CustomAdapter(this,0,objects);
+                mWaitLv.setAdapter(customAdapter);
                 if(flag) {
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     pref.edit().putString("groupId",groupId).apply();
                     startActivity(intent);
-                    mTimer.cancel();
+                }else{
+                    TimerTask task = new TimerTask() {
+                        public void run() {
+                            mHandler.post(() -> loginCheck(groupId));
+                        }
+                    };
+                    mTimer.schedule(task, 0, 1000);
                 }
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            customAdapter = new CustomAdapter(this,0,objects);
-            mWaitLv.setAdapter(customAdapter);
 
         });
         httpConnector.post();

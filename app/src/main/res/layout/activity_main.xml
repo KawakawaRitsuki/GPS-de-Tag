@@ -76,7 +76,8 @@
             android:layout_gravity="right"
             android:onClick="onClick"
             android:text="ログイン"
-            android:textColor="@color/brown"/>
+            android:textColor="@color/brown"
+            android:background="@drawable/button" />
     </LinearLayout>
 
 </LinearLayout>
