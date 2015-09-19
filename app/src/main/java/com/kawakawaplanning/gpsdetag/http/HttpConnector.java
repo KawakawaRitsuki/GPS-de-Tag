@@ -107,6 +107,40 @@ public class HttpConnector {
         }).start();
     }
 
+    //ポスト用コマンド
+    public void postNoHandler(){
+        new Thread(() -> {
+            try {
+                URL url = new URL(host);
+                URLConnection uc = url.openConnection();
+                uc.setDoOutput(true);
+                uc.setRequestProperty("Content-type", "application/json");
+                OutputStream os = uc.getOutputStream();
+
+                PrintStream ps = new PrintStream(os);
+                ps.print(message);
+                ps.close();
+
+                InputStream is = uc.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+                StringBuffer sb = new StringBuffer();
+                String s;
+                while ((s = reader.readLine()) != null) {
+                    sb.append(s);
+                }
+                if (resLis != null)
+                    resLis.onResponse(sb.toString());
+
+                reader.close();
+
+            } catch (IOException e) {
+                if (errLis != null)
+                    errLis.onError(0);
+            }
+        }).start();
+    }
+
     public void setHost(String host){
         this.host = host;
     }

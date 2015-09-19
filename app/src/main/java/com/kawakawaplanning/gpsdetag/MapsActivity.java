@@ -17,7 +17,6 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,17 +47,17 @@ public class MapsActivity extends FragmentActivity {
     Timer mTimer;
     private NotificationManager mNm;
     SharedPreferences mPref;
-    HashMap<String,Integer> mMap;
+
 
     boolean finish = false;
-    boolean first = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        mMap = new HashMap<>();
+
 
         mPref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
         mMyId = mPref.getString("loginid", "");
@@ -84,22 +83,18 @@ public class MapsActivity extends FragmentActivity {
         adb.setMessage("終了しますか？");
         adb.setPositiveButton("OK", (DialogInterface dialog, int which) -> {
             finish = true;
-            HttpConnector httpConnector = new HttpConnector("grouplogout", "{\"user_id\":\"" + mMyId + "\"}");
+            HttpConnector httpConnector = new HttpConnector("grouplogout", "{\"user_id\":\"" + mMyId + "\",\"group_id\":\"" + mGroupId + "\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
-                if (Integer.parseInt(message) == 0) {
-                    SharedPreferences.Editor editor = mPref.edit();
-                    editor.putBoolean("loginnow", false);
-                    editor.apply();
-                    stopService(new Intent(this, SendService.class));
-                    finish();
-                } else {
-                    SharedPreferences.Editor editor = mPref.edit();
-                    editor.putBoolean("loginnow", false);
-                    editor.apply();
-                    Toast.makeText(MapsActivity.this, "サーバーエラーが発生しました。強制的に終了しました。", Toast.LENGTH_SHORT).show();
-                    stopService(new Intent(this, SendService.class));
-                    finish();
+                Log.v("kp","Message:"+message);
+                if(message.equals("1")){
+                    HttpConnector http = new HttpConnector("setusing","{\"group_id\":\"" + mGroupId + "\",\"using\":1}");
+                    http.post();
                 }
+                SharedPreferences.Editor editor = mPref.edit();
+                editor.putBoolean("loginnow", false);
+                editor.apply();
+                stopService(new Intent(this, SendService.class));
+                finish();
             });
             httpConnector.setOnHttpErrorListener((int error) -> {
                 android.support.v7.app.AlertDialog.Builder adbs = new android.support.v7.app.AlertDialog.Builder(MapsActivity.this);
@@ -174,15 +169,9 @@ public class MapsActivity extends FragmentActivity {
                     for (int i = 0; i != data.length(); i++) {
                         JSONObject object = data.getJSONObject(i);
                         setMarker(i, object.getString("user_name"), object.getDouble("latitude"), object.getDouble("longitude"));
-                        if(!first && mMap.get(object.getString("user_name")) != object.getInt("login")){
-                            if(object.getInt("login") == 1)
-                                Toast.makeText(MapsActivity.this,object.getString("user_name") + "さんがログアウトしました",Toast.LENGTH_SHORT).show();
-                            else
-                                Toast.makeText(MapsActivity.this,object.getString("user_name") + "さんがログインしました",Toast.LENGTH_SHORT).show();
-                        }
-                        mMap.put(object.getString("user_name"), object.getInt("login"));
+
                     }
-                    first = false;
+
 
                 } catch (JSONException e) {
                     e.printStackTrace();

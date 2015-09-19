@@ -407,6 +407,9 @@ public class SelectGroupActivity extends AppCompatActivity {
 
         objects = new ArrayList<>();
 
+        mTimer=null;
+        mTimer = new Timer();
+
         if(customAdapter != null) {
             customAdapter.clear();
             customAdapter.notifyDataSetChanged();
@@ -415,7 +418,8 @@ public class SelectGroupActivity extends AppCompatActivity {
         mWaitLv.setAdapter(customAdapter);
 
         mHandler.post(() -> firstCheck(groupId));
-        mTimer = new Timer();
+
+
 
         HttpConnector httpConnector = new HttpConnector("grouplogin","{\"user_id\":\""+myId+"\",\"group_id\":\""+groupId+"\"}");
         httpConnector.setOnHttpResponseListener((String message) -> {
@@ -454,8 +458,11 @@ public class SelectGroupActivity extends AppCompatActivity {
                     objects.add(item);
                 }
                 customAdapter = new CustomAdapter(this,0,objects);
-                mWaitLv.setAdapter(customAdapter);
-                if(flag) {
+                mWaitLv.setAdapter(customAdapter);//変更部分
+                if(json.getInt("using") == 0 || flag){
+                    HttpConnector http = new HttpConnector("setusing","{\"group_id\":\"" + groupId + "\",\"using\":0}");
+                    http.post();
+
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     pref.edit().putString("groupId",groupId).apply();
@@ -477,12 +484,21 @@ public class SelectGroupActivity extends AppCompatActivity {
         httpConnector.post();
     }
 
+    public void start(View v){
+        HttpConnector http = new HttpConnector("setusing","{\"group_id\":\"" + groupId + "\",\"using\":0}");
+        http.post();
+        mTimer.cancel();
+        Intent intent = new Intent();
+        intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
+        pref.edit().putString("groupId",groupId).apply();
+        startActivity(intent);
+    }
+
     public void loginCheck(String groupId){
         HttpConnector httpConnector = new HttpConnector("loginstate","{\"group_id\":\"" + groupId + "\"}");
         httpConnector.setOnHttpResponseListener((String message) -> {
             Bitmap successImage = BitmapFactory.decodeResource(getResources(), R.drawable.success);
             Bitmap errorImage = BitmapFactory.decodeResource(getResources(), R.drawable.error);
-
 
             try {
                 JSONObject json = new JSONObject(message);
@@ -503,12 +519,15 @@ public class SelectGroupActivity extends AppCompatActivity {
 
                     objects.set(i, cd);
                 }
-                if(flag) {
+                if(json.getInt("using") == 0 || flag){
+                    HttpConnector http = new HttpConnector("setusing","{\"group_id\":\"" + groupId + "\",\"using\":0}");
+                    http.post();
+
+                    mTimer.cancel();
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     pref.edit().putString("groupId",groupId).apply();
                     startActivity(intent);
-                    mTimer.cancel();
                 }
 
             } catch (JSONException e) {
