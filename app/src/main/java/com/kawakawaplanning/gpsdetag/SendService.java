@@ -27,7 +27,6 @@ import java.util.TimerTask;
 
 public class SendService extends Service implements LocationListener {
 
-    private Timer timer = new Timer();
     private LocationManager locationManager;
 
     static public String myId ;
@@ -36,7 +35,6 @@ public class SendService extends Service implements LocationListener {
     Timer mTimer;
 
     HashMap<String,Integer> mMap;
-    boolean first = true;
     NotificationManager mNm;
     @Override
     public void onCreate() {
@@ -70,7 +68,7 @@ public class SendService extends Service implements LocationListener {
 
     @Override
     public void onDestroy() {
-        timer.cancel();
+        mTimer.cancel();
         locationManager.removeUpdates(this);
 
 
@@ -113,17 +111,16 @@ public class SendService extends Service implements LocationListener {
 
                     for (int i = 0; i != data.length(); i++) {
                         JSONObject object = data.getJSONObject(i);
-                        if (!first && mMap.get(object.getString("user_name")) != object.getInt("login")) {
-                            if (!object.getString("user_id").equals(myId)) {
+                        if (mMap.containsKey("user_id")) {
+                            if (!object.getString("user_id").equals(myId) && mMap.get(object.getString("user_id")) != object.getInt("login")) {
                                 if (object.getInt("login") == 1)
                                     notification(object.getString("user_name"),"ログアウト");
                                 else
                                     notification(object.getString("user_name"),"ログイン");
                             }
                         }
-                        mMap.put(object.getString("user_name"), object.getInt("login"));
+                        mMap.put(object.getString("user_id"), object.getInt("login"));
                     }
-                    first = false;
 
 
                 }catch (JSONException e){

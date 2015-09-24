@@ -2,4 +2,6 @@
 <resources>
     <color name="yellow">#fff791</color>
     <color name="brown">#935e32</color>
+    <color name="showcase_back">#cc935e32</color>
+    <color name="showcase_text">#fff791</color>
 </resources>

@@ -149,7 +149,7 @@ public class SignUpActivity extends AppCompatActivity {
         } else if (p.matcher(idEt.getText().toString()).find()) {
             idEt.setError(null);
         } else {
-            idEt.setError("半角英数字で入力してください");
+            idEt.setError("半角英数で入力してください");
         }
 
         if(pwEt.getText().length() < 6){
@@ -157,7 +157,7 @@ public class SignUpActivity extends AppCompatActivity {
         } else if(p.matcher(pwEt.getText().toString()).find()) {
             pwEt.setError(null);
         }else{
-            pwEt.setError("半角英数字で入力してください");
+            pwEt.setError("半角英数で入力してください");
         }
 
         if(!pw2Et.getText().toString().equals(pwEt.getText().toString())){
@@ -165,7 +165,7 @@ public class SignUpActivity extends AppCompatActivity {
         } else if (p.matcher(pw2Et.getText().toString()).find()) {
             pw2Et.setError(null);
         }else{
-            pw2Et.setError("半角英数字で入力してください");
+            pw2Et.setError("半角英数で入力してください");
         }
 
         if(nnEt.getText().length() < 1){
@@ -181,7 +181,12 @@ public class SignUpActivity extends AppCompatActivity {
                 waitDialog.dismiss();
                 Log.v("tag", message);
                 if (Integer.parseInt(message) == 0) {
-                    alert("登録完了", "会員登録が完了しました。早速ログインボタンを押して始めよう！", null);
+                    alert("登録完了", "会員登録が完了しました。早速ログインして始めよう！", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
                 } else {
                     alert("エラー", "このIDは既に使用されています。エラーコード:1",null);
                 }

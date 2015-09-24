@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
@@ -17,6 +18,8 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.ListView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,11 +29,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
+import com.kawakawaplanning.gpsdetag.list.MemberAdapter;
+import com.kawakawaplanning.gpsdetag.list.MemberData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,13 +57,25 @@ public class MapsActivity extends FragmentActivity {
 
     boolean finish = false;
 
+    ListView listLv;
+    ImageView listIv;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        listLv = (ListView)findViewById(R.id.listView3);
+        listIv = (ImageView)findViewById(R.id.chatCloseBtn);
 
+        listIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listIv.setVisibility(View.INVISIBLE);
+                listLv.setVisibility(View.INVISIBLE);
+            }
+        });
 
         mPref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
         mMyId = mPref.getString("loginid", "");
@@ -77,6 +95,39 @@ public class MapsActivity extends FragmentActivity {
 
     }
 
+    public void chatBtn(View v){
+        listIv.setVisibility(View.VISIBLE);
+        listLv.setVisibility(View.VISIBLE);
+        HttpConnector httpConnector = new HttpConnector("logincheck", "{\"group_id\":\"" + mGroupId + "\"}");
+        httpConnector.setOnHttpResponseListener((String message) -> {
+            try {
+                JSONObject json = new JSONObject(message);
+                JSONArray data = json.getJSONArray("data");
+
+                List<MemberData> objects = new ArrayList<>();
+
+                for (int i = 0; i != data.length(); i++) {
+                    JSONObject object = data.getJSONObject(i);
+                    MemberData item = new MemberData();
+                    if (object.getInt("login") == 0){
+                        item.setColorData(Color.WHITE);
+                    }else{
+                        item.setColorData(Color.GRAY);
+                    }
+                    item.setTextData(" " + object.getString("user_name"));
+                    objects.add(item);
+                }
+                MemberAdapter memberAdapter = new MemberAdapter(this,0,objects);
+                listLv.setAdapter(memberAdapter);//変更部分
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        });
+        httpConnector.post();
+
+    }
+
     public void onClick(View v) {
         AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
         adb.setTitle("確認");
@@ -85,9 +136,9 @@ public class MapsActivity extends FragmentActivity {
             finish = true;
             HttpConnector httpConnector = new HttpConnector("grouplogout", "{\"user_id\":\"" + mMyId + "\",\"group_id\":\"" + mGroupId + "\"}");
             httpConnector.setOnHttpResponseListener((String message) -> {
-                Log.v("kp","Message:"+message);
-                if(message.equals("1")){
-                    HttpConnector http = new HttpConnector("setusing","{\"group_id\":\"" + mGroupId + "\",\"using\":1}");
+                Log.v("kp", "Message:" + message);
+                if (message.equals("1")) {
+                    HttpConnector http = new HttpConnector("setusing", "{\"group_id\":\"" + mGroupId + "\",\"using\":1}");
                     http.post();
                 }
                 SharedPreferences.Editor editor = mPref.edit();
@@ -136,6 +187,7 @@ public class MapsActivity extends FragmentActivity {
         int nId = R.string.app_name;
         mNm.cancel(nId);
         mNm.cancel(nId + 1);
+        mNm.cancel(nId + 10);
         mMyId = mPref.getString("loginid", "");
     }
 
@@ -168,7 +220,7 @@ public class MapsActivity extends FragmentActivity {
 
                     for (int i = 0; i != data.length(); i++) {
                         JSONObject object = data.getJSONObject(i);
-                        setMarker(i, object.getString("user_name"), object.getDouble("latitude"), object.getDouble("longitude"));
+                        setMarker(i, object.getString("user_name"), object.getDouble("latitude"), object.getDouble("longitude"), object.getInt("login"));
 
                     }
 
@@ -183,17 +235,23 @@ public class MapsActivity extends FragmentActivity {
 
     }
 
-    public void setMarker(final int id,final String name,final double lat,final double lon){
+    public void setMarker(final int id,final String name,final double lat,final double lon,final int login){
         mHandler.post(() -> {
                     if (mMarker.get(id) == null) {
-                        LatLng latLng = new LatLng(lat, lon);
-                        MarkerOptions markerOptions = new MarkerOptions();
-                        markerOptions.position(latLng);
-                        markerOptions.title(name);
-                        mMarker.put(id, mGoogleMap.addMarker(markerOptions));
+                        if(login==0){
+                            LatLng latLng = new LatLng(lat, lon);
+                            MarkerOptions markerOptions = new MarkerOptions();
+                            markerOptions.position(latLng);
+                            markerOptions.title(name);
+                            mMarker.put(id, mGoogleMap.addMarker(markerOptions));
+                        }
                     } else {
-                        LatLng latLng = new LatLng(lat, lon);
-                        mMarker.get(id).setPosition(latLng);
+                        if(login==0) {
+                            LatLng latLng = new LatLng(lat, lon);
+                            mMarker.get(id).setPosition(latLng);
+                        }else{
+                            mMarker.get(id).remove();
+                        }
                     }
                 }
         );

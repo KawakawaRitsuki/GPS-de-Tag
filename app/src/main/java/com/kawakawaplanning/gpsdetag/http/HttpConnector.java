@@ -16,7 +16,7 @@ import java.net.URLConnection;
  */
 public class HttpConnector {
 
-    String host = "http://kawakawaritsuki.dip.jp:8080/";
+    String host = "http://kawakawaplanning.dip.jp:8080/";
     String message = "";
     private OnHttpResponseListener resLis = null;
     private OnHttpErrorListener errLis = null;

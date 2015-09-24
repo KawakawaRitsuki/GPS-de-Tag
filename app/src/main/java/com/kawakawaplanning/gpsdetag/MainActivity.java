@@ -10,11 +10,18 @@ import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
+
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
+import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,6 +38,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        findView();
+
+
+        ShowcaseConfig config = new ShowcaseConfig();
+        config.setDelay(500); // half second between each showcase view
+        config.setMaskColor(getResources().getColor(R.color.showcase_back));
+        config.setContentTextColor(getResources().getColor(R.color.showcase_text));
+        config.setDismissTextColor(getResources().getColor(R.color.showcase_text));
+
+        MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "login");
+        sequence.setConfig(config);
+        sequence.addSequenceItem(findViewById(R.id.signinbutton), "まずは会員登録をしましょう！", "次へ");
+        sequence.addSequenceItem(findViewById(R.id.loginbutton), "登録ができたら早速ログイン！", "次へ");
+        sequence.start();
+
         pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
 
         if(pref.getBoolean("loginnow",false)) {
@@ -40,8 +62,6 @@ public class MainActivity extends AppCompatActivity {
         }else{
             autoLogin();
         }
-
-        findView();
 
         mPwEt.setOnKeyListener((View v, int keyCode, KeyEvent event) -> {
             if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
@@ -171,6 +191,28 @@ public class MainActivity extends AppCompatActivity {
         adb.setMessage(msg);
         adb.setPositiveButton("OK", null);
         adb.show();
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu){
+        menu.add(0, 0, 0, "オープンソースライセンス");
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case 0:
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                LayoutInflater inflater = (LayoutInflater)this.getSystemService(LAYOUT_INFLATER_SERVICE);
+                View view =  inflater.inflate(R.layout.opensourcelicense,(ViewGroup)findViewById(R.id.rootLayout));
+                alertDialogBuilder.setTitle("オープンソースライセンス");
+                alertDialogBuilder.setView(view);
+                alertDialogBuilder.setPositiveButton("OK",null);
+                alertDialogBuilder.setCancelable(true);
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
+                return true;
+        }
+        return false;
     }
 
 }

@@ -37,6 +37,9 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
+import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
+
 
 public class SelectGroupActivity extends AppCompatActivity {
 
@@ -64,6 +67,18 @@ public class SelectGroupActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         setScreenContent(R.layout.activity_select_group);
+
+        ShowcaseConfig config = new ShowcaseConfig();
+        config.setDelay(500); // half second between each showcase view
+        config.setMaskColor(getResources().getColor(R.color.showcase_back));
+        config.setContentTextColor(getResources().getColor(R.color.showcase_text));
+        config.setDismissTextColor(getResources().getColor(R.color.showcase_text));
+
+        MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(this, "select");
+        sequence.setConfig(config);
+        sequence.addSequenceItem(findViewById(R.id.button2), "グループの作成にはこのボタンを押してください\nグループとはこのアプリを同時に使うメンバーをまとめるものです\nグループの「作成」は誰か１人が行います\n\n", "次へ");
+        sequence.addSequenceItem(findViewById(R.id.button3), "グループに入るにはこのボタンを押してください\nグループを作る１人以外のメンバーは「参加」をしてください", "次へ");
+        sequence.start();
     }
 
     public void logout(View v){
@@ -428,6 +443,7 @@ public class SelectGroupActivity extends AppCompatActivity {
             }
         });
         httpConnector.post();
+
     }
     List<CustomData> objects;
     public void firstCheck(String groupId){
@@ -473,7 +489,11 @@ public class SelectGroupActivity extends AppCompatActivity {
                             mHandler.post(() -> loginCheck(groupId));
                         }
                     };
-                    mTimer.schedule(task, 0, 1000);
+                    try {
+                        mTimer.schedule(task, 0, 1000);
+                    }catch (IllegalStateException e){
+                        e.printStackTrace();
+                    }
                 }
 
             } catch (JSONException e) {
