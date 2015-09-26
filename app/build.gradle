@@ -20,8 +20,8 @@ android {
         applicationId "com.kawakawaplanning.gpsdetag"
         minSdkVersion 15
         targetSdkVersion 22
-        versionCode 3
-        versionName "1.0a"
+        versionCode 4
+        versionName "1.0b"
     }
     buildTypes {
         release {

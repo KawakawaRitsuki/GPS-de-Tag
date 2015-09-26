@@ -482,6 +482,8 @@ public class SelectGroupActivity extends AppCompatActivity {
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     pref.edit().putString("groupId",groupId).apply();
+                    pref.edit().putString("loginid",myId).apply();
+                    Log.v("kp",groupId);
                     startActivity(intent);
                 }else{
                     TimerTask task = new TimerTask() {
@@ -511,6 +513,7 @@ public class SelectGroupActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
         pref.edit().putString("groupId",groupId).apply();
+        pref.edit().putString("loginid",myId).apply();
         startActivity(intent);
     }
 
@@ -547,6 +550,7 @@ public class SelectGroupActivity extends AppCompatActivity {
                     Intent intent = new Intent();
                     intent.setClassName("com.kawakawaplanning.gpsdetag", "com.kawakawaplanning.gpsdetag.MapsActivity");
                     pref.edit().putString("groupId",groupId).apply();
+                    pref.edit().putString("loginid",myId).apply();
                     startActivity(intent);
                 }
 

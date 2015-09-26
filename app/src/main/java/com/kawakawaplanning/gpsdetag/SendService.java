@@ -31,7 +31,6 @@ public class SendService extends Service implements LocationListener {
 
     static public String myId ;
     static public String groupId;
-    static public String mem[];
     Timer mTimer;
 
     HashMap<String,Integer> mMap;
@@ -41,7 +40,6 @@ public class SendService extends Service implements LocationListener {
         mMap = new HashMap<>();
         SharedPreferences pref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS );
         myId = pref.getString("loginid", "");
-        mem = pref.getString("mem","").split(",");
 
         mNm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -70,8 +68,6 @@ public class SendService extends Service implements LocationListener {
     public void onDestroy() {
         mTimer.cancel();
         locationManager.removeUpdates(this);
-
-
     }
 
     @Override
@@ -111,23 +107,24 @@ public class SendService extends Service implements LocationListener {
 
                     for (int i = 0; i != data.length(); i++) {
                         JSONObject object = data.getJSONObject(i);
-                        if (mMap.containsKey("user_id")) {
+                        if (mMap.containsKey(object.getString("user_id"))) {
                             if (!object.getString("user_id").equals(myId) && mMap.get(object.getString("user_id")) != object.getInt("login")) {
                                 if (object.getInt("login") == 1)
-                                    notification(object.getString("user_name"),"ログアウト");
+                                    notification(object.getString("user_name"), "ログアウト");
                                 else
-                                    notification(object.getString("user_name"),"ログイン");
+                                    notification(object.getString("user_name"), "ログイン");
                             }
                         }
                         mMap.put(object.getString("user_id"), object.getInt("login"));
                     }
 
 
-                }catch (JSONException e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
+
 
         httpConnector.postNoHandler();
     }

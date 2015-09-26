@@ -247,10 +247,11 @@ public class MapsActivity extends FragmentActivity {
                         }
                     } else {
                         if(login==0) {
+                            mMarker.get(id).setVisible(true);
                             LatLng latLng = new LatLng(lat, lon);
                             mMarker.get(id).setPosition(latLng);
                         }else{
-                            mMarker.get(id).remove();
+                            mMarker.get(id).setVisible(false);
                         }
                     }
                 }
