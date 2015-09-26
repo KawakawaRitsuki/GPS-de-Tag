@@ -124,8 +124,6 @@ public class SignUpActivity extends AppCompatActivity {
 
     }
 
-
-
     EditText idEt;
     EditText pwEt;
     EditText pw2Et;
@@ -181,12 +179,7 @@ public class SignUpActivity extends AppCompatActivity {
                 waitDialog.dismiss();
                 Log.v("tag", message);
                 if (Integer.parseInt(message) == 0) {
-                    alert("登録完了", "会員登録が完了しました。早速ログインして始めよう！", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    });
+                    alert("登録完了", "会員登録が完了しました。早速ログインして始めよう！",(DialogInterface dialog, int which) -> finish());
                 } else {
                     alert("エラー", "このIDは既に使用されています。エラーコード:1",null);
                 }

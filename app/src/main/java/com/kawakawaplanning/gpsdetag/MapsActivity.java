@@ -3,6 +3,7 @@ package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -14,7 +15,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -69,12 +69,9 @@ public class MapsActivity extends FragmentActivity {
         listLv = (ListView)findViewById(R.id.listView3);
         listIv = (ImageView)findViewById(R.id.chatCloseBtn);
 
-        listIv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listIv.setVisibility(View.INVISIBLE);
-                listLv.setVisibility(View.INVISIBLE);
-            }
+        listIv.setOnClickListener((v) -> {
+            listIv.setVisibility(View.INVISIBLE);
+            listLv.setVisibility(View.INVISIBLE);
         });
 
         mPref = getSharedPreferences("loginpref", Activity.MODE_MULTI_PROCESS);
@@ -99,7 +96,7 @@ public class MapsActivity extends FragmentActivity {
         listIv.setVisibility(View.VISIBLE);
         listLv.setVisibility(View.VISIBLE);
         HttpConnector httpConnector = new HttpConnector("logincheck", "{\"group_id\":\"" + mGroupId + "\"}");
-        httpConnector.setOnHttpResponseListener((String message) -> {
+        httpConnector.setOnHttpResponseListener((message) -> {
             try {
                 JSONObject json = new JSONObject(message);
                 JSONArray data = json.getJSONArray("data");
@@ -187,7 +184,6 @@ public class MapsActivity extends FragmentActivity {
         int nId = R.string.app_name;
         mNm.cancel(nId);
         mNm.cancel(nId + 1);
-        mNm.cancel(nId + 10);
         mMyId = mPref.getString("loginid", "");
     }
 
@@ -269,21 +265,21 @@ public class MapsActivity extends FragmentActivity {
 
     public void notification(){
         if(!finish) {
-            Intent _intent = new Intent(this, MapsActivity.class);
-            _intent.putExtra("name", mMyId);
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 510, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setContentIntent(contentIntent);
-            builder.setTicker("集まれ！は実行中です");
-            builder.setSmallIcon(R.drawable.ic_stat_name);//アイコン
-            builder.setContentTitle("集まれ！");
-            builder.setContentText("集まれ！は実行中です。マップを表示。");
-            builder.setOngoing(true);
-            builder.setWhen(System.currentTimeMillis());
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 1, new Intent(this, MapsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+
+            Notification notification = new Notification.Builder(this)
+                    .setTicker("集まれ！は実行中です")
+                    .setContentTitle("集まれ！")
+                    .setContentText("集まれ！は実行中です。")
+                    .setContentIntent(contentIntent)
+                    .setSmallIcon(R.drawable.ic_stat_name)
+                    .setOngoing(true)
+                    .build();
 
             int nId = R.string.app_name;
-            mNm.notify(nId, builder.build());
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            nm.notify(nId, notification);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.kawakawaplanning.gpsdetag;
 
 import android.app.Activity;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,10 +13,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.NotificationCompat;
 
 import com.kawakawaplanning.gpsdetag.http.HttpConnector;
-import com.kawakawaplanning.gpsdetag.http.OnHttpResponseListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -98,30 +97,27 @@ public class SendService extends Service implements LocationListener {
 
     public void loginCheck() {
         HttpConnector httpConnector = new HttpConnector("logincheck","{\"group_id\":\"" + groupId + "\"}");
-        httpConnector.setOnHttpResponseListener(new OnHttpResponseListener() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject json = new JSONObject(response);
-                    JSONArray data = json.getJSONArray("data");
+        httpConnector.setOnHttpResponseListener((response) -> {
+            try {
+                JSONObject json = new JSONObject(response);
+                JSONArray data = json.getJSONArray("data");
 
-                    for (int i = 0; i != data.length(); i++) {
-                        JSONObject object = data.getJSONObject(i);
-                        if (mMap.containsKey(object.getString("user_id"))) {
-                            if (!object.getString("user_id").equals(myId) && mMap.get(object.getString("user_id")) != object.getInt("login")) {
-                                if (object.getInt("login") == 1)
-                                    notification(object.getString("user_name"), "ログアウト");
-                                else
-                                    notification(object.getString("user_name"), "ログイン");
-                            }
+                for (int i = 0; i != data.length(); i++) {
+                    JSONObject object = data.getJSONObject(i);
+                    if (mMap.containsKey(object.getString("user_id"))) {
+                        if (!object.getString("user_id").equals(myId) && mMap.get(object.getString("user_id")) != object.getInt("login")) {
+                            if (object.getInt("login") == 1)
+                                notification(object.getString("user_name"), "ログアウト");
+                            else
+                                notification(object.getString("user_name"), "ログイン");
                         }
-                        mMap.put(object.getString("user_id"), object.getInt("login"));
                     }
-
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    mMap.put(object.getString("user_id"), object.getInt("login"));
                 }
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         });
 
@@ -130,19 +126,20 @@ public class SendService extends Service implements LocationListener {
     }
 
     public void notification(String who,String what){
-        Intent _intent = new Intent(this, MapsActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 520, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setContentIntent(contentIntent);
-        builder.setTicker(who + "さんが" + what + "しました。");
-        builder.setSmallIcon(R.drawable.ic_stat_name);//アイコン
-        builder.setContentTitle("集まれ！");
-        builder.setContentText(who + "さんが" + what + "しました。");
-        builder.setWhen(System.currentTimeMillis());
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 1, new Intent(this, MapsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        int nId = R.string.app_name + 10;
-        mNm.notify(nId, builder.build());
+        Notification notification = new Notification.Builder(this)
+                .setTicker(who + "さんが" + what + "しました。")
+                .setContentTitle("集まれ！")
+                .setContentText(who + "さんが" + what + "しました。")
+                .setContentIntent(contentIntent)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setAutoCancel(true)
+                .build();
 
+        int nId = R.string.app_name + 1;
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.notify(nId, notification);
     }
 }

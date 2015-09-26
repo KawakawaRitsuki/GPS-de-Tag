@@ -32,37 +32,6 @@ public class HttpConnector {
     }
     //コンストラクタここまで
 
-    //ゲット用コマンド
-    public void get(){
-        Handler handler = new Handler();
-        new Thread(() -> {
-            try {
-                URL url = new URL(host);
-                URLConnection uc = url.openConnection();
-
-                InputStream is = uc.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-                StringBuffer sb = new StringBuffer();
-                String s;
-                while ((s = reader.readLine()) != null) {
-                    sb.append(s);
-                }
-                handler.post(() -> {
-                    if (resLis != null)
-                        resLis.onResponse(sb.toString());
-                });
-                reader.close();
-
-            } catch (IOException e) {
-                handler.post(() -> {
-                    if (errLis != null)
-                        errLis.onError(0);
-                });
-            }
-        }).start();
-    }
-
     //ポスト用コマンド
     public void post(){
         Handler handler = new Handler();
@@ -107,7 +76,7 @@ public class HttpConnector {
         }).start();
     }
 
-    //ポスト用コマンド
+    //ポスト、メインスレッド外時用
     public void postNoHandler(){
         new Thread(() -> {
             try {
@@ -168,6 +137,7 @@ public class HttpConnector {
     public void removeResponseListener(){
         this.resLis = null;
     }
+
     public void removeErreListener(){
         this.errLis = null;
     }
@@ -177,13 +147,14 @@ public class HttpConnector {
 /*
 サンプル
 
-HttpConnector httpConnector = new HttpConnector("outgroup","");
-httpConnector.setOnHttpResponseListener((String message) -> {
-if(Integer.parseInt(message) == 0){
-//成功時
-}else{
-//失敗時
-}
-});
-httpConnector.post();
+    HttpConnector httpConnector = new HttpConnector("outgroup","");
+    httpConnector.setOnHttpResponseListener((String message) -> {
+        if(Integer.parseInt(message) == 0){
+            //成功時
+        }else{
+            //失敗時
+        }
+    });
+    httpConnector.post();
+
  */
